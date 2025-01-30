@@ -3,7 +3,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "comm.h"
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "timers.h"
+
+#include "common.h"
+#include "uartdll.h"
 #include <stdio.h>
 #include "common.h"
 #include "stm32h7xx.h"
@@ -267,7 +272,7 @@ void hwdriversTimersStart();
 void hwdriversModemAdcSignalSourceSelect(uint8_t AdcSignalSourceSelect);
 void vmicmodemAgc(uint32_t PeakToPeakSignal);
 void hwdriversBleUartTxPinControl(hardwaredriversUart3TxPinState_T Control);
-void hwdriversVinGpioConfigure(commSleepState_T SleepState);
+//void hwdriversVinGpioConfigure(commSleepState_T SleepState);
 void hwdriversI2CLinesGpioConfigure(hardwaredriversI2CLinesState_T i2cLinesState);
 void hwdriversUart3DmaTx(uint8_t *s, uint16_t length);
 

@@ -3,9 +3,6 @@
 #include <math.h>
 #include <arm_math.h>
 #include <hwdrivers.h>
-#include "i2cwork.h"
-#include "lps22hb.h"
-#include "lsm6ds3.h"
 #include "timers.h"
 #include "iir.h"
 #include "autoresonance.h"
@@ -13,17 +10,10 @@
 #include "protocolapp.h"
 #include "transQ.h"
 #include "pccommAppLayer.h"
-#include "leds.h"
 #include  "measure.h"
 #include "task.h"
 #include "queue.h"
-#include "buzzer.h"
-#include "vibrator.h"
 #include "stm32h7xx.h"
-#include "ble.h"
-#include "charger.h"
-#include "comm.h"
-#include "spiflash.h"
 
 
 // G L O B A L   T Y P E S   A N D    D E F I N I T I O N S 
@@ -544,67 +534,67 @@ void hwdriversAdc2Config(void)
 
 }
 
-void hwdriversI2CLinesGpioConfigure(hardwaredriversI2CLinesState_T i2cLinesState)
-{
-	GPIO_InitTypeDef  GPIO_InitStruct;
-
-	return;
-  
-  switch(i2cLinesState)
-  {
-  case HWDRIVERS_I2C_LINES_AF:
-	  GPIO_InitStruct.Pin = SNS_I2C_SCL_Pin|SNS_I2C_SDA_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-	  GPIO_InitStruct.Pull = GPIO_PULLUP;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	  GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
-	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	  HAL_GPIO_WritePin (GPIOB,  SNS_I2C_SDA_Pin, GPIO_PIN_SET);
-	 break;
-  case HWDRIVERS_I2C_OUTPUT_TOGGLE_HIGH:
-	  GPIO_InitStruct.Pin = SNS_I2C_SCL_Pin|SNS_I2C_SDA_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_PULLUP;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+//void hwdriversI2CLinesGpioConfigure(hardwaredriversI2CLinesState_T i2cLinesState)
+//{
+//	GPIO_InitTypeDef  GPIO_InitStruct;
+//
+//	return;
+//
+//  switch(i2cLinesState)
+//  {
+//  case HWDRIVERS_I2C_LINES_AF:
+//	  GPIO_InitStruct.Pin = SNS_I2C_SCL_Pin|SNS_I2C_SDA_Pin;
+//	  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+//	  GPIO_InitStruct.Pull = GPIO_PULLUP;
+//	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 //	  GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
-	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	  HAL_GPIO_WritePin (GPIOB,  SNS_I2C_SDA_Pin, GPIO_PIN_SET);
-    break;
-  case HWDRIVERS_I2C_OUTPUT_TOGGLE_LOW:
-	GPIO_InitStruct.Pin = SNS_I2C_SCL_Pin|SNS_I2C_SDA_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_PULLUP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-//	GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//	  HAL_GPIO_WritePin (GPIOB,  SNS_I2C_SDA_Pin, GPIO_PIN_SET);
+//	 break;
+//  case HWDRIVERS_I2C_OUTPUT_TOGGLE_HIGH:
+//	  GPIO_InitStruct.Pin = SNS_I2C_SCL_Pin|SNS_I2C_SDA_Pin;
+//	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//	  GPIO_InitStruct.Pull = GPIO_PULLUP;
+//	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+////	  GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
+//	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//	  HAL_GPIO_WritePin (GPIOB,  SNS_I2C_SDA_Pin, GPIO_PIN_SET);
+//    break;
+//  case HWDRIVERS_I2C_OUTPUT_TOGGLE_LOW:
+//	GPIO_InitStruct.Pin = SNS_I2C_SCL_Pin|SNS_I2C_SDA_Pin;
+//	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//	GPIO_InitStruct.Pull = GPIO_PULLUP;
+//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+////	GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
+//	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//
+//	HAL_GPIO_WritePin (GPIOB,  SNS_I2C_SDA_Pin, GPIO_PIN_RESET);
+//    break;
+//  default:
+//	  break;
+//  }
+//}
 
-	HAL_GPIO_WritePin (GPIOB,  SNS_I2C_SDA_Pin, GPIO_PIN_RESET);
-    break;
-  default:
-	  break;
-  }
-}
 
-
-void hwdriversVinGpioConfigure(commSleepState_T SleepState)
-{
-  
-  switch(SleepState)
-  {
-  case COMM_SLEEP_STATE_STOP_MODE:
-	SavedRelayState = GPIOE->ODR;
-
-  HAL_GPIO_WritePin(GPIOE, RELAY_CONTROL_EN_Pin|RELAY_CONTROL_0_Pin|RELAY_CONTROL_1_Pin
-                          |RELAY_CONTROL_2_Pin|RELAY_CONTROL_3_Pin|RELAY_CONTROL_4_Pin|RELAY_CONTROL_5_Pin
-                          |RELAY_CONTROL_6_Pin|RELAY_CONTROL_7_Pin, GPIO_PIN_RESET);
-
-    break;
-  case COMM_SLEEP_STATE_NORMAL:
-    
-    HAL_GPIO_WritePin(GPIOE, SavedRelayState, GPIO_PIN_SET);
-    break;
-  }
-}
+//void hwdriversVinGpioConfigure(commSleepState_T SleepState)
+//{
+//
+//  switch(SleepState)
+//  {
+//  case COMM_SLEEP_STATE_STOP_MODE:
+//	SavedRelayState = GPIOE->ODR;
+//
+//  HAL_GPIO_WritePin(GPIOE, RELAY_CONTROL_EN_Pin|RELAY_CONTROL_0_Pin|RELAY_CONTROL_1_Pin
+//                          |RELAY_CONTROL_2_Pin|RELAY_CONTROL_3_Pin|RELAY_CONTROL_4_Pin|RELAY_CONTROL_5_Pin
+//                          |RELAY_CONTROL_6_Pin|RELAY_CONTROL_7_Pin, GPIO_PIN_RESET);
+//
+//    break;
+//  case COMM_SLEEP_STATE_NORMAL:
+//
+//    HAL_GPIO_WritePin(GPIOE, SavedRelayState, GPIO_PIN_SET);
+//    break;
+//  }
+//}
 
 
  
@@ -1526,16 +1516,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 		}
 	}
 #endif
-	if(huart == &huart3)
-	{
-		// Transmission completed, Dequeue element from queue and free user allocated if needed
-		if(transQDequeueFromISR(UartTransQueueHandle3, &myQueueDataPtr) == TRANSQ_OK)
-		{
-		 if(myQueueDataPtr.UserDataPtr && myQueueDataPtr.MemoryFreeNeeded)
-			xQueueSendFromISR(hwdriversMemFreeQueueHandle, &myQueueDataPtr.UserDataPtr, 0);
-		 Uart3Dma1Stream3Busy = false;
-		}
-	}
 	if(huart == &huart6)
 	{
 		// Transmission completed, Dequeue element from queue and free user allocated if needed
@@ -2046,7 +2026,6 @@ void HAL_PWR_PVDCallback(void)
   {
     // Save pointers to the SPI - Flash 
 //	hwdriversGpioBitWrite(HWDRIVERS_PB14_USB_TEST,0);
-    eventsLogMemoryPointersToNvmSavePVD();
 //	hwdriversGpioBitWrite(HWDRIVERS_PB14_USB_TEST,1);
 
     //    if (flashBuffer2Required)
@@ -2386,7 +2365,7 @@ ReturnCode_T hwdriversRelaysChangeActivate(uint16_t NewRelaysValue)
   pccpmmAppLayerStruct.BeltTransmitterRegisters.RelayStateLsb = (uint8_t)(NewRelaysValue);
 
   // Activate the Relays Latch Enable
-  HAL_GPIO_WritePin(RELAY_CONTROL_EN_GPIO_Port, RELAY_CONTROL_EN_Pin, GPIO_PIN_SET);
+//  HAL_GPIO_WritePin(RELAY_CONTROL_EN_GPIO_Port, RELAY_CONTROL_EN_Pin, GPIO_PIN_SET);
   //GPIO_WriteBit(GPIOE, GPIO_PIN_7, Bit_SET);
   return RETURNCODE_OK;  
 }
@@ -2400,7 +2379,7 @@ ReturnCode_T hwdriversRelaysChangeActivate(uint16_t NewRelaysValue)
 ReturnCode_T hwdriversRelaysChangeIdle()
 {
   // Deactivate the Relays Latch Enable
-	HAL_GPIO_WritePin(RELAY_CONTROL_EN_GPIO_Port, RELAY_CONTROL_EN_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(RELAY_CONTROL_EN_GPIO_Port, RELAY_CONTROL_EN_Pin, GPIO_PIN_RESET);
 	//GPIO_WriteBit(GPIOE, GPIO_PIN_7, Bit_RESET);
   // Move all the relays states to inactive
   //RelaysOutputHandle(0);
@@ -3142,33 +3121,33 @@ portTASK_FUNCTION(hwdriverFreeMemFromIsrTask, pvParameters )
 * @param  
 * @retval 
 ******************************************************************************/
-void hwdriversBleUartTxPinControl(hardwaredriversUart3TxPinState_T Control )
-{
-
-  GPIO_InitTypeDef GPIO_InitStruct;
-  
-  switch( Control)
-  {
-  case HWDRIVERS_UART3_TX_PIN_GPIO_ZERO:
-	  GPIO_InitStruct.Pin = BLE_UART_TX_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = NULL; // Regular Push-pull, alternate is unused
-	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	  HAL_GPIO_WritePin (GPIOB,  BLE_UART_TX_Pin, GPIO_PIN_RESET);
-    break;
-  case HWDRIVERS_UART3_TX_PIN_UART_MODE:
-	  GPIO_InitStruct.Pin = BLE_UART_TX_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    break;
-  }
-  
-}
+//void hwdriversBleUartTxPinControl(hardwaredriversUart3TxPinState_T Control )
+//{
+//
+//  GPIO_InitTypeDef GPIO_InitStruct;
+//
+//  switch( Control)
+//  {
+//  case HWDRIVERS_UART3_TX_PIN_GPIO_ZERO:
+//	  GPIO_InitStruct.Pin = BLE_UART_TX_Pin;
+//	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+//    GPIO_InitStruct.Alternate = NULL; // Regular Push-pull, alternate is unused
+//	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//	  HAL_GPIO_WritePin (GPIOB,  BLE_UART_TX_Pin, GPIO_PIN_RESET);
+//    break;
+//  case HWDRIVERS_UART3_TX_PIN_UART_MODE:
+//	  GPIO_InitStruct.Pin = BLE_UART_TX_Pin;
+//	  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+//	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+//	  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
+//	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//    break;
+//  }
+//
+//}
 
 
 

@@ -2,15 +2,9 @@
 #include "pccommAppLayer.h"
 #include "vmicapplayer.h"
 #include "vmicmodem.h"
-#include "sensor.h"
 #include "vlapMain.h"
 #include "autoresonance.h"
-#include "charger.h"
 #include "measure.h"
-#include "spiFlash.h"
-#include "spiflashdisk.h"
-#include "fwupgrade.h"
-#include "ble.h"
 #include "autopower.h"
 #include "config.h"
 
@@ -121,7 +115,7 @@ void pcccommAppLayerProcessing( uint8_t * ptr, uint16_t BufferLength)
   case 'L':
     // Message length
     length = (ptr[MSG_OFFSET_LENGTH] * 256) + ptr[4];
-    bleProgramFsm(BLE_PROGRAM_STIMULI_SEND_DATA, (uint8_t*)&ptr[5], length, &pcccommAppLayerBleBootloaderWriteResponseMsgBuildCallBack);
+//    bleProgramFsm(BLE_PROGRAM_STIMULI_SEND_DATA, (uint8_t*)&ptr[5], length, &pcccommAppLayerBleBootloaderWriteResponseMsgBuildCallBack);
     return;
   case 'M':
     // Message length payload without the payload length
@@ -131,10 +125,8 @@ void pcccommAppLayerProcessing( uint8_t * ptr, uint16_t BufferLength)
     switch(Address)
     {
     case PCCOMMAPPLAYER_BACKUP_ADDRESS:
-      baseAddress = SPIFLASH_VANILLA_START;
       break;
     case PCCOMMAPPLAYER_UPGRADE_ADDRESS:
-      baseAddress = SPIFLASH_UPGRADE_START;
       break;
     default:
       // Not valid address request - return
@@ -142,27 +134,22 @@ void pcccommAppLayerProcessing( uint8_t * ptr, uint16_t BufferLength)
     }
     
     // Check if currently there is a fw download in progress
-    if(fwupgradeStateGet() != FWUPGRADE_STATE_IDLE)
-    {
-      // Notify the FWUPGRADE FSM to stop the download due to version download from the VTS
-      fwupgradeEventSend(FWUPGRADE_OPCODE_STOP_DOWNLOAD, 0, 0);
-    }
+//    if(fwupgradeStateGet() != FWUPGRADE_STATE_IDLE)
+//    {
+//      // Notify the FWUPGRADE FSM to stop the download due to version download from the VTS
+//      fwupgradeEventSend(FWUPGRADE_OPCODE_STOP_DOWNLOAD, 0, 0);
+//    }
 
     uint32_t flashAddress = baseAddress + ((uint32_t)ptr[5] << 24 | (uint32_t)ptr[6] << 16
                                     | (uint32_t)ptr[7] << 8 | (uint32_t)ptr[8]);
 
     //hwdriversGpioBitWrite(HWDRIVERS_PB14_USB_TEST, 0);
 
-    spiflashdiskReqEnqueue(SPIFLASHDISK_FSM_STIMULI_WRITE, flashAddress, 0, (uint8_t*)&ptr[9], messageLength, &pcccommAppLayerSpiFlashWriteResponseMsgBuildCallBack, 0);    
+//    spiflashdiskReqEnqueue(SPIFLASHDISK_FSM_STIMULI_WRITE, flashAddress, 0, (uint8_t*)&ptr[9], messageLength, &pcccommAppLayerSpiFlashWriteResponseMsgBuildCallBack, 0);
     return;
   case 'S':
     // Read the requested spiFlash page
     // Allocated memory buffer
-    SpiFlashPageReadAllocatedMemoryPtr = pvPortMalloc(SPIFLASH_SPI_PAGESIZE);
-    if(SpiFlashPageReadAllocatedMemoryPtr)
-    {
-      spiflashReqEnqueue(SPIFLASH_CMD_READ, Address*SPIFLASH_SPI_PAGESIZE, (uint8_t*)SpiFlashPageReadAllocatedMemoryPtr, 0, SPIFLASH_SPI_PAGESIZE, pcccommAppLayerSpiFlashReadResponseMsgBuildCallBack, false);
-    }
     return;
     break;
   case 'F':
@@ -481,7 +468,7 @@ uint8_t *  RegisterWrite(uint16_t Address, uint8_t Length, uint8_t* PayloadPtr)
       case PCCOMMAPPLAYER_READ_PRODUCTION:
         break;
       case PCCOMMAPPLAYER_READ_EVENTS_LOG_MEMORY:
-        logMemoryPointersSize = sizeof(eventsLogMemoryPointers_T);
+//        logMemoryPointersSize = sizeof(eventsLogMemoryPointers_T);
         // Create response buffer with size of eventsLogMemoryPointers_T and length of the message.
         bufferSize = logMemoryPointersSize + sizeof(logMemoryPointersSize);
 
@@ -489,7 +476,7 @@ uint8_t *  RegisterWrite(uint16_t Address, uint8_t Length, uint8_t* PayloadPtr)
         GenericBufferPayLoadLength = bufferSize;
         
         memcpy(GenericBufferPtr, &logMemoryPointersSize, sizeof(logMemoryPointersSize));
-        memcpy(GenericBufferPtr + sizeof(logMemoryPointersSize), &eventsLogMemoryPointersStructure, logMemoryPointersSize);
+//        memcpy(GenericBufferPtr + sizeof(logMemoryPointersSize), &eventsLogMemoryPointersStructure, logMemoryPointersSize);
         
         break;
       case PCCOMMAPPLAYER_READ_RAM_MEMORY:
@@ -555,7 +542,7 @@ uint8_t *  RegisterWrite(uint16_t Address, uint8_t Length, uint8_t* PayloadPtr)
         {
           // Get the selected memory section to check
           SPIMemoryCommand_T memorySection = (SPIMemoryCommand_T) GenericBufferPtr[0];
-          FwupgradeSpiFugCrcResetT resetRequest = (FwupgradeSpiFugCrcResetT) GenericBufferPtr[1];
+//          FwupgradeSpiFugCrcResetT resetRequest = (FwupgradeSpiFugCrcResetT) GenericBufferPtr[1];
           // Free the generic buffer now that we don't need it
           vPortFree(GenericBufferPtr);
           GenericBufferPtr = 0;
@@ -566,17 +553,17 @@ uint8_t *  RegisterWrite(uint16_t Address, uint8_t Length, uint8_t* PayloadPtr)
           switch(memorySection)
           {
           case PCCOMMAPPLAYER_BACKUP_ADDRESS:
-            baseAddress = SPIFLASH_VANILLA_START;
+//            baseAddress = SPIFLASH_VANILLA_START;
             break;
           case PCCOMMAPPLAYER_UPGRADE_ADDRESS:
-            baseAddress = SPIFLASH_UPGRADE_START;
+//            baseAddress = SPIFLASH_UPGRADE_START;
             break;
           default:
             break;
           }
           
           // Place the check functions 
-          fwupgradeSpiFugCrcCheckStart(baseAddress, resetRequest, pcccommAppLayerSpiFugCrcCheckCompletionCallBack);
+//          fwupgradeSpiFugCrcCheckStart(baseAddress, resetRequest, pcccommAppLayerSpiFugCrcCheckCompletionCallBack);
         }
         break;
       default:
@@ -937,7 +924,7 @@ void   pcccommAppLayerSpiFlashReadResponseMsgBuildCallBack()
   uint16_t i;
   uint8_t CheckSum;
   
-  uint16_t MsgLength = SPIFLASH_SPI_PAGESIZE;
+  uint16_t MsgLength = 0;
   
   CheckSum = ResponseBuffer[0] = 'S';
   for(i=0; i<MsgLength; i++)
@@ -1151,7 +1138,7 @@ ReturnCode_T pccommapplayerTransmitterControl(typesControl_T Control)
   // Charging is not allowed when transmitter is enabled
   if(Control == TYPES_ENABLE)
   {
-    chargerControl( CHARGER_CONTROL_DISABLE);
+//    chargerControl( CHARGER_CONTROL_DISABLE);
     hwdriversGpioBitWrite(HWDRIVERS_TX_SUP_ENABLE, TYPES_ENABLE);
     vTaskDelay(15); // Allow VCC_3.0 to rise before enabling clock
     autopowerPwmTemporaryControl(TYPES_ENABLE);
@@ -1160,7 +1147,7 @@ ReturnCode_T pccommapplayerTransmitterControl(typesControl_T Control)
   {
     autopowerPwmTemporaryControl(TYPES_DISABLE);
     hwdriversGpioBitWrite(HWDRIVERS_TX_SUP_ENABLE, TYPES_DISABLE);
-    chargerControl( CHARGER_CONTROL_ENABLE);
+//    chargerControl( CHARGER_CONTROL_ENABLE);
   }
   // Clear the CRC counter when the transmitter is turned on
   if(Control)

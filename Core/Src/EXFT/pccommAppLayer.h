@@ -6,6 +6,7 @@
 #include "vlapConfig.h"
 #include "timers.h"
 #include "vmicapplayer.h"
+#include "protocolApp.h"
 
 
 

@@ -11,7 +11,6 @@
 #include "math.h"
 
 #include "common.h"
-#include "sensor.h"
 
 
 // G L O B A L   T Y P E S   A N D    D E F I N I T I O N S 

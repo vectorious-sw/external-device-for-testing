@@ -12,18 +12,12 @@
 #include "iir.h"
 #include "config.h"
 #include "vlapConfig.h"
-#include "charger.h"
-#include "events.h"
 #include "config.h"
 #include "vmicmodem.h"
 #include "pccommapplayer.h"
-#include "Leds.h"
 #include "measure.h"
 #include "autopower.h"
-#include "sensor.h"
-#include "buzzer.h"
 #include "hwdrivers.h"
-#include "ble.h"
 
 void auditInit(void);
 
@@ -253,13 +247,13 @@ static void auditLifeCycle(TimerHandle_t pxTimer)
   auditPowerTelemetryUpdate();
 
   hwdriversTxProcessing();
-  if(chargerFinishedUpdating)
-  {
-    auditBatteryLevelCheck();
-	  // Charger processing
-	  chargerProcessing();
-	  chargerDcPlugStateProcessing();
-  }  
+//  if(chargerFinishedUpdating)
+//  {
+//    auditBatteryLevelCheck();
+//	  // Charger processing
+//	  chargerProcessing();
+//	  chargerDcPlugStateProcessing();
+//  }
     
   auditBeltHumanStatusProcessing();
   

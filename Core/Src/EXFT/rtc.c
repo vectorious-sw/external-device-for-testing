@@ -5,8 +5,6 @@
 #include <time.h>
 #include "stm32h7xx.h"
 #include "measure.h"
-#include "comm.h"
-#include "charger.h"
 #include "vlapMain.h"
 #include "crc32.h"
 
@@ -547,26 +545,16 @@ void rtcPushButtonIsr( void ) // blue user button on new device
   
 //  if (EXTI_GetITStatus(EXTI_LINE_BLUE_PB_NEW_DEVICE) != RESET)
   {
-    if(commSleepModeStateGet() == COMM_SLEEP_STATE_NORMAL)
-    {
+
       if(!HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_14) && PBDebounceSample)
       {
         // Debounce push button
         xTimerChangePeriodFromISR(rtcPBDebounceTimerHandler, 300, 100);
         PBDebounceSample = false;
         
-        if(chargerDcPlugStatusGet() == CHARGER_DC_PLUG_INSERTED)
-        {
-          chargerRequestSend(CHARGER_REQ_INDICATION_ON);
-        }
-        else
-        {
-          measureTaskEventSend(MEASURE_PB_START, MEASURE_TASK_QUEUE_SEND_SOURCE_ISR);
-        }
+        measureTaskEventSend(MEASURE_PB_START, MEASURE_TASK_QUEUE_SEND_SOURCE_ISR);
       }           
-    }
-    else
-      rtcWakeupReason = RTC_WAKEUP_REASON_PUSH_BUTTON;
+
   }    
   // We do not clear the Interrupt flag in sleep mode as we want to identify the sleep wakeup reason, will be done in rtc.c sleep section
   //EXTI_ClearITPendingBit(EXTI_LINE_BLUE_PB_NEW_DEVICE);

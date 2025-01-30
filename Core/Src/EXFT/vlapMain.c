@@ -9,25 +9,17 @@
 #include "vlapConfig.h"
 #include "pccommAppLayer.h"
 #include "timers.h"
-#include "lps22hb.h"
 //#include "gpioTable.h"
 #include "audit.h"
 #include "autoresonance.h"
 #include "autopower.h"
-#include "charger.h"
 #include "vlapMain.h"
 #include "measure.h"
-#include "sensor.h"
-#include "leds.h"
-#include "ble.h"
 #include "MeasurementsData.h"
-#include "comm.h"
-#include "buzzer.h"
-#include "vibrator.h"
+
 #include "measure.h"
 #include "dac.h"
 #include "main.h"
-#include "spiflashdisk.h"
 #include "usartdll.h"
 
 void vlapmainMeasurementSet( uint32_t * DstPtr, uint32_t *ValuePtr, uint16_t Count);
@@ -264,8 +256,8 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
   // Start ADC Software Conversion 
   // the following is redundant, since SWSTART is automaticaly set by the dma.
   // but we still decided to leave it here, for doc sake. gc, nm
-  bleInit();
-  bleControl( BLE_CONTROL_ENABLE);
+//  bleInit();
+//  bleControl( BLE_CONTROL_ENABLE);
   // TODO:
   //ADC_SoftwareStartConv(ADCx);
   CommandSequence = 0;

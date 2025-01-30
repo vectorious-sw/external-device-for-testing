@@ -9,7 +9,6 @@
 #include "rtc.h"
 #include "queue.h"
 #include "uartDll.h"
-#include "events.h"
 
 // unhide the following line to enable debugging, If enabled during
 // Runtime execution (without debugger), the program will stop after 4 seconds !!!

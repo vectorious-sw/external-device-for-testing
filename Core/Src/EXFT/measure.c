@@ -8,14 +8,8 @@
 #include "pccommAppLayer.h"
 #include "autopower.h"
 #include "autoresonance.h"
-#include "buzzer.h"
-#include "vibrator.h"
-#include "leds.h"
 #include "audit.h"
 #include "config.h"
-#include "comm.h"
-#include "charger.h"
-#include "fwupgrade.h"
 
 
 // L O C A L    D E F I N I T I O N S
@@ -398,10 +392,10 @@ portTASK_FUNCTION(measureTask, pvParameters )
               }
               
               // Stop the FW upgrade in case that it is currently downloading
-              fwupgradeEventSend(FWUPGRADE_OPCODE_STOP_DOWNLOAD, 0, 0);
+//              fwupgradeEventSend(FWUPGRADE_OPCODE_STOP_DOWNLOAD, 0, 0);
               
               // Send abort message to the commTask to abort the current communication session
-              commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_COMM_ABORT);
+//              commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_COMM_ABORT);
               
               //MEASURE_FSM_STATE_CHANGE(MEASURE_CHECK_USB_CONNECTED, 10);
               MEASURE_FSM_STATE_CHANGE(MEASURE_CHECK_PLUG_IN_NURSE_MODE, 10);
@@ -543,47 +537,47 @@ portTASK_FUNCTION(measureTask, pvParameters )
           case MEASURE_FSM_QUEUE_ENTRY_TYPE_MODEM_SAMPLE:
             break;
           default:
-            if(chargerDcPlugStatusGet() == CHARGER_DC_PLUG_INSERTED)
-            {
-              buzzerRequestToQueueAdd(BUZZER_BEEPING_OPTION4);
-              vibratorRequestToQueueAdd(VIBRATOR_OPTION4);
-              ledsPatternSet(LEDS_MAIN_PATTERN_MEAS_CHARGING);
-              MEASURE_FSM_STATE_CHANGE(MEASURE_CHECK_USB_CONNECTED, 1000);
-            }
-            else
-            {              
-              //Mark that measure starts.
-              ledsPatternSet(LEDS_MAIN_PATTERN_MEAS_START);
-              buzzerRequestToQueueAdd(BUZZER_BEEPING_OPTION1);
-              vibratorRequestToQueueAdd(VIBRATOR_OPTION1);
-#if 1
-              if(configConfigurationDb.AutoResonaceControl)
-              {
-                pccommapplayerAutoResonanceControl(TYPES_ENABLE);
-              }
-              else
-              {
-                pccommapplayerAutoResonanceControl(TYPES_DISABLE);
-                autoresonanceManaualRelaysSet(configConfigurationDb.ManualRelayStateForSequence);
-              }
-#endif
-              // Set psl to 10 by default for belt and human check
-              //MEASURE_FSM_STATE_CHANGE(MEASURE_MINIMAL_ENERGY_WAIT, 10000);
-              measureMaxOperationPsl = configConfigurationDb.MaximalSequencePsl;
-              if(configConfigurationDb.MeasurementPslControl == 0) //TODO: This doesnt exist in VTS config
-              {
-                autopowerManaualPwmSet(configConfigurationDb.MeasurementManualPslForSequence);
-              } 
-              else 
-              {
-                autopowerManaualPwmSet(10);
-              }
-              measureBeltHumanCheckCounter = 20;
-              // Mark that if the Nurse mode is, the next PB will go to Nurse mode
-              measureNurseModeDone = 0;
- //             MEASURE_FSM_STATE_CHANGE(MEASURE_MINIMAL_ENERGY_WAIT, 10000);
-            MEASURE_FSM_STATE_CHANGE(MEASURE_CHECK_BELT_AND_HUMAN_STATUS, 2000);
-            }
+//            if(chargerDcPlugStatusGet() == CHARGER_DC_PLUG_INSERTED)
+//            {
+//              buzzerRequestToQueueAdd(BUZZER_BEEPING_OPTION4);
+//              vibratorRequestToQueueAdd(VIBRATOR_OPTION4);
+//              ledsPatternSet(LEDS_MAIN_PATTERN_MEAS_CHARGING);
+//              MEASURE_FSM_STATE_CHANGE(MEASURE_CHECK_USB_CONNECTED, 1000);
+//            }
+//            else
+//            {
+//              //Mark that measure starts.
+//              ledsPatternSet(LEDS_MAIN_PATTERN_MEAS_START);
+//              buzzerRequestToQueueAdd(BUZZER_BEEPING_OPTION1);
+//              vibratorRequestToQueueAdd(VIBRATOR_OPTION1);
+//#if 1
+//              if(configConfigurationDb.AutoResonaceControl)
+//              {
+//                pccommapplayerAutoResonanceControl(TYPES_ENABLE);
+//              }
+//              else
+//              {
+//                pccommapplayerAutoResonanceControl(TYPES_DISABLE);
+//                autoresonanceManaualRelaysSet(configConfigurationDb.ManualRelayStateForSequence);
+//              }
+//#endif
+//              // Set psl to 10 by default for belt and human check
+//              //MEASURE_FSM_STATE_CHANGE(MEASURE_MINIMAL_ENERGY_WAIT, 10000);
+//              measureMaxOperationPsl = configConfigurationDb.MaximalSequencePsl;
+//              if(configConfigurationDb.MeasurementPslControl == 0) //TODO: This doesnt exist in VTS config
+//              {
+//                autopowerManaualPwmSet(configConfigurationDb.MeasurementManualPslForSequence);
+//              }
+//              else
+//              {
+//                autopowerManaualPwmSet(10);
+//              }
+//              measureBeltHumanCheckCounter = 20;
+//              // Mark that if the Nurse mode is, the next PB will go to Nurse mode
+//              measureNurseModeDone = 0;
+// //             MEASURE_FSM_STATE_CHANGE(MEASURE_MINIMAL_ENERGY_WAIT, 10000);
+//            MEASURE_FSM_STATE_CHANGE(MEASURE_CHECK_BELT_AND_HUMAN_STATUS, 2000);
+//            }
             break;
           }
           break;
@@ -646,9 +640,9 @@ portTASK_FUNCTION(measureTask, pvParameters )
                 measureStartTime = rtcEpochGet();
                 
                 // Get accelerometer parameters for the start of measurement
-                measureAccXStart = sensorAccGet(SENSOR_AXIS_X); 
-                measureAccYStart = sensorAccGet(SENSOR_AXIS_Y);
-                measureAccZStart = sensorAccGet(SENSOR_AXIS_Z);
+//                measureAccXStart = sensorAccGet(SENSOR_AXIS_X);
+//                measureAccYStart = sensorAccGet(SENSOR_AXIS_Y);
+//                measureAccZStart = sensorAccGet(SENSOR_AXIS_Z);
                 
                 // Start capturing P2P for accelerometer axis
                 sensorStartCaptureP2PAcc(measureAccXStart, measureAccYStart, measureAccZStart);
@@ -676,9 +670,9 @@ portTASK_FUNCTION(measureTask, pvParameters )
                 measureStartTime = rtcEpochGet();
                 
                 // Get accelerometer parameters for the start of measurement
-                measureAccXStart = sensorAccGet(SENSOR_AXIS_X); 
-                measureAccYStart = sensorAccGet(SENSOR_AXIS_Y);
-                measureAccZStart = sensorAccGet(SENSOR_AXIS_Z);
+//                measureAccXStart = sensorAccGet(SENSOR_AXIS_X);
+//                measureAccYStart = sensorAccGet(SENSOR_AXIS_Y);
+//                measureAccZStart = sensorAccGet(SENSOR_AXIS_Z);
                 
                 // Start capturing P2P for accelerometer axis
                 sensorStartCaptureP2PAcc(measureAccXStart, measureAccYStart, measureAccZStart);
@@ -1678,9 +1672,9 @@ portTASK_FUNCTION(measureTask, pvParameters )
                   MeasurementIndex = 0;
                   vmicmodemSelect(MEASSLCT_REAL_MEMS_WITHOUT_NOISE_COMPENSATION, 127);
                   // Get accelerometer parameters for the pre real
-                  measureAccXPreReal = sensorAccGet(SENSOR_AXIS_X); 
-                  measureAccYPreReal = sensorAccGet(SENSOR_AXIS_Y);
-                  measureAccZPreReal = sensorAccGet(SENSOR_AXIS_Z);
+//                  measureAccXPreReal = sensorAccGet(SENSOR_AXIS_X);
+//                  measureAccYPreReal = sensorAccGet(SENSOR_AXIS_Y);
+//                  measureAccZPreReal = sensorAccGet(SENSOR_AXIS_Z);
                   
                   measureVmicSourceSelectMonitorFsmInit(MEASURE_CHANNEL_SELECT_AVRG_INDEX_REALMEMS_127, MEASSLCT_REAL_MEMS_WITHOUT_NOISE_COMPENSATION, 127, 0);
                   measureSourceSelectTimeoutRetry = MEASURE_SELECT_MAX_RETRY;
@@ -2277,13 +2271,13 @@ portTASK_FUNCTION(measureTask, pvParameters )
               MeasurementsResults.AccYPreReal = HTONS(measureAccYPreReal);
               MeasurementsResults.AccZPreReal = HTONS(measureAccZPreReal);
               
-              MeasurementsResults.AccXEnd = HTONS(sensorAccGet(SENSOR_AXIS_X));
-              MeasurementsResults.AccYEnd = HTONS(sensorAccGet(SENSOR_AXIS_Y));
-              MeasurementsResults.AccZEnd = HTONS(sensorAccGet(SENSOR_AXIS_Z));
+//              MeasurementsResults.AccXEnd = HTONS(sensorAccGet(SENSOR_AXIS_X));
+//              MeasurementsResults.AccYEnd = HTONS(sensorAccGet(SENSOR_AXIS_Y));
+//              MeasurementsResults.AccZEnd = HTONS(sensorAccGet(SENSOR_AXIS_Z));
               
-              MeasurementsResults.AccXP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_X));
-              MeasurementsResults.AccYP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_Y));
-              MeasurementsResults.AccZP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_Z));
+//              MeasurementsResults.AccXP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_X));
+//              MeasurementsResults.AccYP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_Y));
+//              MeasurementsResults.AccZP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_Z));
               
               if(configConfigurationDb.MeasurementSequence != 109)
                 MeasurementsResults.SequenceNumber = HTONL(108);
@@ -2363,7 +2357,7 @@ ReturnCode_T measureIdleStateChange(uint16_t QueueWairTimeoutIn1mSec, uint8_t se
   if(QueueWairTimeoutIn1mSec)
   {
     buzzAndVibrateForFail();
-    ledsPatternSet(LEDS_MAIN_PATTERN_FAIL);
+//    ledsPatternSet(LEDS_MAIN_PATTERN_FAIL);
   }
   
   sprintf(PrintBuff, "Last measurement phase before going to Idle = %d", MeasureFsmState);
@@ -2406,13 +2400,13 @@ ReturnCode_T measureIdleStateChange(uint16_t QueueWairTimeoutIn1mSec, uint8_t se
     MeasurementsResults.AccYPreReal = HTONS(measureAccYPreReal);
     MeasurementsResults.AccZPreReal = HTONS(measureAccZPreReal);
     
-    MeasurementsResults.AccXEnd = HTONS(sensorAccGet(SENSOR_AXIS_X));
-    MeasurementsResults.AccYEnd = HTONS(sensorAccGet(SENSOR_AXIS_Y));
-    MeasurementsResults.AccZEnd = HTONS(sensorAccGet(SENSOR_AXIS_Z));
+//    MeasurementsResults.AccXEnd = HTONS(sensorAccGet(SENSOR_AXIS_X));
+//    MeasurementsResults.AccYEnd = HTONS(sensorAccGet(SENSOR_AXIS_Y));
+//    MeasurementsResults.AccZEnd = HTONS(sensorAccGet(SENSOR_AXIS_Z));
     
-    MeasurementsResults.AccXP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_X));
-    MeasurementsResults.AccYP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_Y));
-    MeasurementsResults.AccZP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_Z));
+//    MeasurementsResults.AccXP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_X));
+//    MeasurementsResults.AccYP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_Y));
+//    MeasurementsResults.AccZP2P = HTONS(sensorAccP2PGet(SENSOR_AXIS_Z));
     
     if(configConfigurationDb.MeasurementSequence != 109)
       MeasurementsResults.SequenceNumber = HTONL(108);
@@ -2950,8 +2944,8 @@ uint32_t measurementSerialIdGet()
 // TODO: Function name do not accord with coding conventions 
 ReturnCode_T buzzAndVibrateForFail()
 {
-  buzzerRequestToQueueAdd(BUZZER_BEEPING_OPTION3);
-  vibratorRequestToQueueAdd(VIBRATOR_OPTION3);
+//  buzzerRequestToQueueAdd(BUZZER_BEEPING_OPTION3);
+//  vibratorRequestToQueueAdd(VIBRATOR_OPTION3);
   
   return RETURNCODE_OK;
 }
@@ -3014,13 +3008,13 @@ uint8_t measurementConditionCheck()
   
   // Measurement will not start if device is charging( Lab exception: USB connected and Vectorious GUI or VTS are polling the device)
   //if(chargerChargingStatusGet())
-  if(chargerDcPlugStatusGet() == CHARGER_DC_PLUG_INSERTED)
-  {
-    MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_CHARGING_PLUG_CONNECTED;
-    eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_CHARGING_EVENT,0,0,0);
-    strcat(Ptr, "USB ConnectedError ");
-    MyReturn |= 1;
-  }
+//  if(chargerDcPlugStatusGet() == CHARGER_DC_PLUG_INSERTED)
+//  {
+//    MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_CHARGING_PLUG_CONNECTED;
+//    eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_CHARGING_EVENT,0,0,0);
+//    strcat(Ptr, "USB ConnectedError ");
+//    MyReturn |= 1;
+//  }
   // Battery must be within the allowed valaues
   if(auditBatteryStatusGet()!=AUDIT_BV_OK)
   {
@@ -3226,7 +3220,7 @@ ReturnCode_T measureNurseModeIndication(uint32_t peakToPeakSignalMeasure, uint32
         case MEASURE_POWER_LEVEL5:
           //ledsPatternSet(LEDS_POWER_LEVEL5);
 //          ledsPatternSetByPriority(LEDS_POWER_LEVEL5, LEDS_PRIORITY_P1_HIGHEST);
-          vibratorRequestToQueueAdd(VIBRATOR_NURSE_MODE);
+//          vibratorRequestToQueueAdd(VIBRATOR_NURSE_MODE);
           break;
         default:
           break;
@@ -3495,9 +3489,9 @@ void measureEndMeasurementSeq()
   
   vlapmainDebugLog("PUBLISH RESULTS");
   //Mark that measure ends.
-  ledsPatternSet(LEDS_MAIN_PATTERN_SUCCESS);
-  buzzerRequestToQueueAdd(BUZZER_BEEPING_OPTION2);
-  vibratorRequestToQueueAdd(VIBRATOR_OPTION2);
+//  ledsPatternSet(LEDS_MAIN_PATTERN_SUCCESS);
+//  buzzerRequestToQueueAdd(BUZZER_BEEPING_OPTION2);
+//  vibratorRequestToQueueAdd(VIBRATOR_OPTION2);
   autoresonanceControl(AUTORESONANCE_CONTROL_OFF);
   // Stop capturing P2P of accelerometer
   sensorStopCaptureP2PAcc();
@@ -3509,14 +3503,14 @@ ReturnCode_T measureProgressLedsSequence(MeasureFsmState_T newState)
   switch(newState)
   {
   case MEASURE_DELAY_BEFORE_START:
-    ledsPatternSet(LEDS_MAIN_PATTERN_PROGRESS_SLOW);
+//    ledsPatternSet(LEDS_MAIN_PATTERN_PROGRESS_SLOW);
     break;
   case MEASURE_MINIMAL_ENERGY_T127_SOURCE_SELECT_SAMPLE_WAIT:
     break;
   case MEASURE_VMIC_INTERNAL_CAP_1_MEASURE_WAIT:
     break;
   case MEASURE_VMIC_REAL_MEMS_WAIT:
-    ledsPatternSet(LEDS_MAIN_PATTERN_PROGRESS_RAPID);
+//    ledsPatternSet(LEDS_MAIN_PATTERN_PROGRESS_RAPID);
     break;
   case MEASURE_TEMPERATURE_2_MEASUREMENT_WAIT:
     break;

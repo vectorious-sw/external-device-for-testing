@@ -5,15 +5,7 @@
 #include "inet.h"
 #include "rtc.h"
 #include "vmicapplayer.h"
-#include "spiflash.h"
-#include "events.h"
 //#include "vlapConfig.h"
-#include "comm.h"
-#include "sensor.h"
-#include "aescbc.h"
-#include "ble.h"
-#include "fwupgrade.h"
-#include "charger.h"
 #include "common.h"
 #include "crc32.h"
 
@@ -128,184 +120,7 @@ ReturnCode_T protocolAppVerifyReceivedProtocolHeader(ProtocolappHeader_t* sentPr
 ***************************************************************************/
 ReturnCode_T protocolappHandlePacket(uartdllChannel_t Channel, uint8_t * MessagePtr, uint32_t MessageLength)
 {
-  ReturnCode_T ApiReturnCode = RETURNCODE_ERROR;
-  ProtocolappHeader_t* AppLayerHeaderPtr; 
-  ProtocolappGeneralResp_t myResp;
-  uint8_t* OutputPtr = MessagePtr;
-  uint32_t receivedConfigSize;
-    
-  // Get original size(to remove padding later)
-  aescbcProtcolHeader_t* EncryptionHeaderPtr = (aescbcProtcolHeader_t*)(MessagePtr);
-  uint16_t originalMessageSize = NTOHS(EncryptionHeaderPtr->EncryptedMsgLength);
-  
-  // We decrypt the received DLL message before starting application layer parsing, The MessagePtr points to the received encryption header start
-  if(aescbcDecrypt(MessagePtr, OutputPtr, MessageLength-sizeof(aescbcProtcolHeader_t), configProductionDb.DownStreamAesCbcKey, 1) != RETURNCODE_OK)
-  {
-    sprintf(protocolAppPrintBuff, "Decryption failure");
-    vlapmainDebugLog(protocolAppPrintBuff);
-    commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_APP_INVALID_ACK);
-    return(RETURNCODE_ERROR);
-  }
-  // Form a pointer to ProtocolappHeader_t
-  AppLayerHeaderPtr = (ProtocolappHeader_t*) MessagePtr;
-  
-  ProtocolappHeader_t* sentProtocolHeader = commPendingProtocolHeaderEventPtrGet();
-  // Check if ACK general header is valid
-  if(protocolAppVerifyReceivedProtocolHeader(sentProtocolHeader, AppLayerHeaderPtr) != RETURNCODE_OK)
-  {
-    // Clear the sent protocol header
-    memset(sentProtocolHeader, 0, sizeof(ProtocolappHeader_t));
-    commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_APP_INVALID_ACK);
-    return(RETURNCODE_ERROR);
-  }
-    
-  // Clear the sent protocol header
-  memset(sentProtocolHeader, 0, sizeof(ProtocolappHeader_t));
-  
-  // Update the RTC Epoch time based on the received date and time
-  rtcEpochTimeAndDateSet(AppLayerHeaderPtr->TransmissionTimeStamp);
-    
-  if(AppLayerHeaderPtr->DestinationAddress != PROTOCOLAPP_VLAPEX_ADDRESS)
-    ApiReturnCode = RETURNCODE_WRONG_DST_ADDRESS;
-  else
-    if(AppLayerHeaderPtr->SourceAddress != PROTOCOLAPP_SERVER_ADDRESS)
-      ApiReturnCode = RETURNCODE_WRONG_SRC_ADDRESS;
-    else
-    {
-      switch(AppLayerHeaderPtr->MessageOpCode)
-      {
-      case PROTOCOLAPP_GENERAL_ACK_EVENT:
-        commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_APP_ACK);
-        break;
-      case PROTOCOLAPP_GENERAL_NACK_EVENT:               
-        commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_APP_NACK);
-        break;
-      case PROTOCOLAPP_CONFIGURATION_DOWNLOAD_RESP:
-        receivedConfigSize = originalMessageSize - sizeof(ProtocolappHeader_t);
-        // Check that received config size is the same as our struct.
-        if(receivedConfigSize == sizeof(configConfigurationDb_t))
-        {
-          configConfigurationDb_t MyConfig;
-          configConfigurationDb_t* AppLayerHeaderPtr;
-          
-          // Form a pointer to configConfigurationDb_t
-          AppLayerHeaderPtr = (configConfigurationDb_t*) (MessagePtr + sizeof(ProtocolappHeader_t));
-          ConfigNetworkOrderFix(AppLayerHeaderPtr, &MyConfig);
-          // Check if new ConfigurationVersionId is higher then current version id, if not - break;
-          if(MyConfig.ConfigurationVersionId <= configConfigurationDb.ConfigurationVersionId)
-          {
-            break;
-          }
-          
-          configConfigurationDb_t *pointerToConfig = &MyConfig;
-          // Set new config
-          configApplicationConfigDbWrite((uint8_t *)pointerToConfig, receivedConfigSize); 
-          commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_CONFIG_RESP);
-        }
-        else
-        {
-          // Mark that there is no new config as the size of it is invalid
-          commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_NO_NEW_CONFIG_RESP);
-        }
-        break;
-      case  PROTOCOLAPP_LOG_MEMORY_CMD:
-        ApiReturnCode = eventsLogMemoryCmd((ProtocolappLogMemoryStructCmd_t*) (MessagePtr + sizeof(ProtocolappHeader_t)) );
-        break;
-      case PROTOCOLAPP_CONFIGURATION_DOWNLOAD_NOUPDATE_RESP:
-        commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_NO_NEW_CONFIG_RESP);
-        break;
-        
-        
-#ifdef VMIC_PROGRAMMER              
-      case   PROTOCOLAPP_VMIC_PROGRAMMER_CMD:
-        switch((ProtocolappVmicprogCmd_t)((ProtocolappVmicProgrammerCmd_t*)MessagePayloadPtr)->VmicCmd)
-        {
-        case PROTOCOLAPP_VMICCMD_PROG_START:
-          break;
-        case PROTOCOLAPP_VMICCMD_PROG_ABORT:                            
-          break;
-        case PROTOCOLAPP_VMICCMD_REG_WRITE:
-          break;
-        case PROTOCOLAPP_VMICCMD_REG_READ:
-          break;         
-        case PROTOCOLAPP_VMICCMD_REFERENCE_VOLTAGE_AND_BIAS_CURRENT_SET: 
-          break;
-        case PROTOCOLAPP_VMICCMD_OSC_SET:
-          vmicapplayerOscilatorSettingFsm();
-          break;
-        case PROTOCOLAPP_VMICCMD_UNIQUE_ID_SET:                          
-          break;
-        }
-        break;
-      case   PROTOCOLAPP_VMIC_PROGRAMMER_REQ:
-        break;
-#endif
-        
-        
-        
-      case PROTOCOLAPP_FW_UPGRADE_START_RESP:
-        if((chargerPlugStateGet() != CHARGER_PLUG_DISCONNECTED)&& (auditBatteryStatusGet() != AUDIT_BV_CROSSED_UB_SENDED))
-        {
-          // Fw Upgrade started 
-          fwupgradeStateReset();
-          fwupgradeEventSend(FWUPGRADE_OPCODE_START, (MessagePtr + sizeof(ProtocolappHeader_t)), originalMessageSize );
-          // Suspend the comm FSM
-          commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_SUSPEND_DURING_FWUPGRADE);
-        }
-        else
-        {
-          if(chargerPlugStateGet() == CHARGER_PLUG_DISCONNECTED)
-          {
-            sprintf(protocolAppPrintBuff, "Charger is not connected - cannot start fw upgrade");
-            vlapmainDebugLog(protocolAppPrintBuff);
-          }
-        }
-          break;
-          
-      case PROTOCOLAPP_FW_UPGRADE_CHUNK_SEND_RESP:
-          // Fw Upgrade started 
-          fwupgradeEventSend(FWUPGRADE_OPCODE_NEW_CHUNK, (MessagePtr + sizeof(ProtocolappHeader_t)), originalMessageSize);
-          // Suspend the comm FSM
-          commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_SUSPEND_DURING_FWUPGRADE);
-          break;
-          
-      case PROTOCOLAPP_PORT_WRITE_CMD:
-          break;
-        
-      default:
-        ApiReturnCode = RETURNCODE_UNSUPPORTED;
-      }
-      // Analyze Error returns
-      switch (ApiReturnCode)
-      {
-        // Supported Set commands returns simple status response
-      case RETURNCODE_OK:
-        {
-          myResp.OpCode = AppLayerHeaderPtr->MessageOpCode;
-          //         protocolappMessageBuild(Channel, AppLayerHeaderPtr->SessionID, PROTOCOLAPP_GENERAL_ACK_EVENT, (char*)&myResp, sizeof(myResp),0,0 );
-        }
-        return(RETURNCODE_OK);
-        // If the Set command returns error respond with nack
-      case RETURNCODE_ERROR:
-        // Nack
-        myResp.OpCode = AppLayerHeaderPtr->MessageOpCode;
-        //        protocolappMessageBuild(Channel, AppLayerHeaderPtr->SessionID, PROTOCOLAPP_GENERAL_ACK_EVENT, (char*)&myResp, sizeof(myResp),0,0 );
-        return(RETURNCODE_ERROR);
-        // Fall through to check for Get commands codes
-      case RETURNCODE_UNSUPPORTED:
-        // Nack
-        myResp.OpCode = AppLayerHeaderPtr->MessageOpCode;
-        //       protocolappMessageBuild(Channel, AppLayerHeaderPtr->SessionID, PROTOCOLAPP_GENERAL_ACK_EVENT, (char*)&myResp, sizeof(myResp) ,0,0);
-        return(RETURNCODE_ERROR);
-        break;
-      case NO_RESPONSE_NEEDED:
-        break;
-      default:
-    	  break;
-      }
-    }
-    // Getting here indicates something is wrong
-    return(RETURNCODE_ERROR);
+    return(RETURNCODE_OK);
 }
 
 /**************************************************************************
@@ -473,12 +288,12 @@ ReturnCode_T protocolappMessageBuild(uartdllChannel_t Channel, uint32_t RequrstO
     return(RETURNCODE_ERROR);
   
   // Fill the power measurements and statuses
-  myUpStreamHeader.BattVoltage                  = HTONS(myMeasurments.BattVoltage);    
-  myUpStreamHeader.DcVoltage                    = HTONS(myMeasurments.DcInputVoltage); 
-  myUpStreamHeader.ExternalTemperature          = HTONS(sensorTemperatureGet());
-  myUpStreamHeader.accX                         = HTONS(sensorAccGet(SENSOR_AXIS_X));
-  myUpStreamHeader.accY                         = HTONS(sensorAccGet(SENSOR_AXIS_Y));
-  myUpStreamHeader.accZ                         = HTONS(sensorAccGet(SENSOR_AXIS_Z));
+//  myUpStreamHeader.BattVoltage                  = HTONS(myMeasurments.BattVoltage);
+//  myUpStreamHeader.DcVoltage                    = HTONS(myMeasurments.DcInputVoltage);
+//  myUpStreamHeader.ExternalTemperature          = HTONS(sensorTemperatureGet());
+//  myUpStreamHeader.accX                         = HTONS(sensorAccGet(SENSOR_AXIS_X));
+//  myUpStreamHeader.accY                         = HTONS(sensorAccGet(SENSOR_AXIS_Y));
+//  myUpStreamHeader.accZ                         = HTONS(sensorAccGet(SENSOR_AXIS_Z));
   // Clear the staus word
   myUpStreamHeader.StatusUnion.StatusWord       = 0;
   // Update bits
@@ -558,53 +373,53 @@ ReturnCode_T protocolappMessageBuild(uartdllChannel_t Channel, uint32_t RequrstO
     MessageLength = MessageLength;
   
   // Add all other headers
-  MessageLength += (sizeof(aescbcProtcolHeader_t) + sizeof(spiflashLogMemoryHeaderT));
+//  MessageLength += (sizeof(aescbcProtcolHeader_t) + sizeof(spiflashLogMemoryHeaderT));
   
-  cPtr = (uint8_t*)pvPortMalloc(MessageLength);
-  if(cPtr)
-  {
-    /// Copy the headers and the Message type related structure to the allocated memory, Note, the ProtocolHeader starts after the DLL header 
-    // Copy the protocol header to the destination pointer
-    memcpy((uint8_t*)(cPtr+sizeof(spiflashLogMemoryHeaderT) + sizeof(aescbcProtcolHeader_t)), (uint8_t*)&myProtocolHeader, sizeof(myProtocolHeader));
-    // Copy the upstream header to the destination pointer
-    memcpy((uint8_t*)(cPtr+sizeof(spiflashLogMemoryHeaderT)+sizeof(myProtocolHeader) + sizeof(aescbcProtcolHeader_t)), (uint8_t*)&myUpStreamHeader, sizeof(myUpStreamHeader));
-    if(OpCodeRelatedStructureLength && OpCodeRelatedStructurePtr)
-      memcpy((uint8_t*)(cPtr+sizeof(spiflashLogMemoryHeaderT)+sizeof(myProtocolHeader) + sizeof(myUpStreamHeader) + sizeof(aescbcProtcolHeader_t)), (uint8_t*)(OpCodeRelatedStructurePtr), OpCodeRelatedStructureLength);
-
-    // Free the OpCodeRelated allocated memory 
-    if(PayloadPtr && PayloadMemFreeRequired)
-      vPortFree(PayloadPtr);
-
-    // Update the calling function with the message ptr and length
-    if(ReturnedMessagePtr && ReturnedMessagePtr)
-    {
-      // Add the Sync pattern
-      ((spiflashLogMemoryHeaderT*)cPtr)->SyncPattern = SPIFLASH_SYNC_PATTERN;
-      // Update the spiflash payload header, exclude the spiflashHeaderSizeT size 
-      ((spiflashLogMemoryHeaderT*)cPtr)->EntrySize = (MessageLength-sizeof(spiflashLogMemoryHeaderT));
-      // Update the spiflash Rev. entry index 
-      ((spiflashLogMemoryHeaderT*)cPtr)->PrevEntryAddress = eventsQueuePrevHeadIndexGet();
-      // This is the full msg including the nvm header 
-      *ReturnedMessageLengthPtr = MessageLength;
-      *ReturnedMessagePtr = cPtr;
-      // Increment the numerator
-      MessageNumerator++;
-      return(RETURNCODE_OK);
-    }
-    else
-    {
-      // Free the allocated memory
-      vPortFree(cPtr);
-      // Return Error 
-      return(RETURNCODE_ERROR);
-    }
-  }
-  else
-  {
-    allocationErrorBuild++;
-      // Return Error 
-      return(RETURNCODE_ERROR);
-  }
+//  cPtr = (uint8_t*)pvPortMalloc(MessageLength);
+//  if(cPtr)
+//  {
+//    /// Copy the headers and the Message type related structure to the allocated memory, Note, the ProtocolHeader starts after the DLL header
+//    // Copy the protocol header to the destination pointer
+//    memcpy((uint8_t*)(cPtr+sizeof(spiflashLogMemoryHeaderT) + sizeof(aescbcProtcolHeader_t)), (uint8_t*)&myProtocolHeader, sizeof(myProtocolHeader));
+//    // Copy the upstream header to the destination pointer
+//    memcpy((uint8_t*)(cPtr+sizeof(spiflashLogMemoryHeaderT)+sizeof(myProtocolHeader) + sizeof(aescbcProtcolHeader_t)), (uint8_t*)&myUpStreamHeader, sizeof(myUpStreamHeader));
+//    if(OpCodeRelatedStructureLength && OpCodeRelatedStructurePtr)
+//      memcpy((uint8_t*)(cPtr+sizeof(spiflashLogMemoryHeaderT)+sizeof(myProtocolHeader) + sizeof(myUpStreamHeader) + sizeof(aescbcProtcolHeader_t)), (uint8_t*)(OpCodeRelatedStructurePtr), OpCodeRelatedStructureLength);
+//
+//    // Free the OpCodeRelated allocated memory
+//    if(PayloadPtr && PayloadMemFreeRequired)
+//      vPortFree(PayloadPtr);
+//
+//    // Update the calling function with the message ptr and length
+////    if(ReturnedMessagePtr && ReturnedMessagePtr)
+////    {
+////      // Add the Sync pattern
+////      ((spiflashLogMemoryHeaderT*)cPtr)->SyncPattern = SPIFLASH_SYNC_PATTERN;
+////      // Update the spiflash payload header, exclude the spiflashHeaderSizeT size
+//////      ((spiflashLogMemoryHeaderT*)cPtr)->EntrySize = (MessageLength-sizeof(spiflashLogMemoryHeaderT));
+////      // Update the spiflash Rev. entry index
+////      ((spiflashLogMemoryHeaderT*)cPtr)->PrevEntryAddress = eventsQueuePrevHeadIndexGet();
+////      // This is the full msg including the nvm header
+////      *ReturnedMessageLengthPtr = MessageLength;
+////      *ReturnedMessagePtr = cPtr;
+////      // Increment the numerator
+////      MessageNumerator++;
+////      return(RETURNCODE_OK);
+////    }
+////    else
+////    {
+////      // Free the allocated memory
+////      vPortFree(cPtr);
+////      // Return Error
+////      return(RETURNCODE_ERROR);
+////    }
+//  }
+//  else
+//  {
+//    allocationErrorBuild++;
+//      // Return Error
+//      return(RETURNCODE_ERROR);
+//  }
   
 }
 
@@ -618,195 +433,8 @@ ReturnCode_T protocolappMessageBuild(uartdllChannel_t Channel, uint32_t RequrstO
 ***************************************************************************/
 ReturnCode_T protocolappMessageBuildnNotViaFlash(uartdllChannel_t Channel, uint32_t RequrstOrCommandSessionId, PROTOCOLAPP_COMMANDS_T messageOpCode, char * PayloadRelatedDataPtr, uint16_t PayloadRelatedDataLength, uint8_t *OutputBufferPtr, uint16_t *ReturnedMessageLengthPtr, uint8_t *ReturnedAddedPad)
 {
-  uint8_t * cPtr;
-  uint16_t	MessageLength;
-  ProtocolappHeader_t myProtocolHeader;
-  ProtocolappUpStreamHeader_t myUpStreamHeader;
-  uint32_t EpochTime=0;
-  uint8_t  Current10mSecCount;
-  hwdriverPowerMeasurments_t myMeasurments;
-  uint8_t* OpCodeRelatedStructurePtr;
-  uint16_t OpCodeRelatedStructureLength = 0;
-  uint16_t transmitterTemperaturePtr;
-  hwdriversNtcTemperatureGet(&transmitterTemperaturePtr);
-  //ProtocolappGeneralResp_t myAck;
-  
-  // The basic message length is the sum of the mandatory headers (SPI Protocol and UpStream) 
-  // We also add the DLL headers (DllHeader_t and DllEndOfMessage_t)at this stage to avoid another malloc and memcpy in the DLL layer
-  // While adding encryption I've removed the DllHeader from the SPI record, The Encryption layer will add this header (To ease pointers complexity)
-   MessageLength =  sizeof(ProtocolappHeader_t) + sizeof(ProtocolappUpStreamHeader_t) /*+ sizeof(DllEndOfMessage_t)*/;
-  
-  // Fill the local generic protocol header structures
-  if(rtcEpochTimeStampGet( &EpochTime, &Current10mSecCount) != RETURNCODE_OK)
-    return(RETURNCODE_ERROR);
-  // We assume we have the Epoch time stamp as the function returned OK, update the Event time
-  myProtocolHeader.EventTimeStamp = 0;//HTONL(EpochTime);            
-  myProtocolHeader.EventTimeStamp10mSec = 0;//Current10mSecCount;      
-  // There is no need to update those value - check the comment for those fields in the sturct definition
-  myProtocolHeader.TransmissionTimeStamp       = 0;     
-  myProtocolHeader.TransmissionTimeStamp10mSec = 0; // byte  
-  myProtocolHeader.EventTimeStamp       = HTONL(rtcEpochGet());     
-  myProtocolHeader.EventTimeStamp10mSec = 0; // byte  
-  myProtocolHeader.MessageNumerator            = HTONL(MessageNumerator);          
-  myProtocolHeader.SourceAddress               = HTONS(PROTOCOLAPP_VLAPEX_ADDRESS);             
-  myProtocolHeader.DestinationAddress         = HTONS(PROTOCOLAPP_SERVER_ADDRESS);
-   // fill the protocol version  
-  myProtocolHeader.ProtocolVersion                 = PROTOCOLAPP_PROTOCOL_VERSION;
-  // Fill the Message Op Code
-  myProtocolHeader.MessageOpCode                 = HTONS(messageOpCode);                    
-  // Fill the returned sessionId field: If the Message Op Code is Event than use the localy generated session ID, If the Message Op Code is Command/Request, use the Command/Request SessionId
-  if(messageOpCode >= PROTOCOLAPP_COMMANDS_AND_REQUESTS_BASE)
-    myProtocolHeader.SessionID                    = HTONL(RequrstOrCommandSessionId);
-  else
-  {
-    UpStreamSessionID++;
-    myProtocolHeader.SessionID                    = HTONL(UpStreamSessionID);
-  }
 
-  // Fill the Up Stream header
-  // Get the STM32 unique ID and copy to the local structure
-  cPtr = protocolappUniqueIdPtrGet();
-  // TODO: consider ading {} around if(cPtr)
-	if(cPtr)
-		memcpy(myUpStreamHeader.VlapExUniqId, cPtr, sizeof(myUpStreamHeader.VlapExUniqId));
-  myUpStreamHeader.TBD0							= HTONS(0);
-  myUpStreamHeader.TransmitterTemperature       = HTONS(transmitterTemperaturePtr);
-  myUpStreamHeader.Longitude                    = HTONL(0);
-  //myUpStreamHeader.AltitudeFromMsl              = HTONL(0);
-  myUpStreamHeader.AbsolutePressure             = HTONL((uint32_t)sensorAbsolutePressureGet());
-  myUpStreamHeader.VmicSerialNumber             = HTONL(measurementSerialIdGet());
-  myUpStreamHeader.ConfigurationVersionId       = HTONL(configVersionIdGet());
-  
-  myProtocolHeader.HwVersion = HTONL(HW_VERSION);
-
-  myProtocolHeader.FwVersion.FirmwareVersion.BuildVersion = PCCOMMAPPLAYER_FW_VERSION_BUILD;
-  myProtocolHeader.FwVersion.FirmwareVersion.MinorVersion = PCCOMMAPPLAYER_FW_VERSION_MINOR;
-  myProtocolHeader.FwVersion.FirmwareVersion.MajorVersion = PCCOMMAPPLAYER_FW_VERSION_MAJOR;
-  myProtocolHeader.FwVersion = (FirmwareVersion_T)HTONL(myProtocolHeader.FwVersion.FirmwareVersionValue);
-
-  myProtocolHeader.BleFwVersion = HTONL(bleProcessorVersionGet());  
-  myProtocolHeader.BootloaderFwVersion = HTONL(fwupgradeBootloaderVersionGet());
-  myProtocolHeader.CRC32 = HTONL(crc32BuffCalc((uint8_t *) &myProtocolHeader, 0, sizeof(ProtocolappHeader_t) - 4));  
-
-
-  
-  if(hwdriversPowerMeasurmentsGet( &myMeasurments ) != RETURNCODE_OK)
-    return(RETURNCODE_ERROR);
-  
-  // Fill the power measurments and statuses 
-  myUpStreamHeader.BattVoltage                  = HTONS(myMeasurments.BattVoltage);    
-  myUpStreamHeader.DcVoltage                    = HTONS(myMeasurments.DcInputVoltage); 
-  myUpStreamHeader.ExternalTemperature          = HTONS(sensorTemperatureGet());
-  myUpStreamHeader.accX                         = HTONS(sensorAccGet(SENSOR_AXIS_X));
-  myUpStreamHeader.accY                         = HTONS(sensorAccGet(SENSOR_AXIS_Y));
-  myUpStreamHeader.accZ                         = HTONS(sensorAccGet(SENSOR_AXIS_Z));
-  
-  // Clear the staus word
-  myUpStreamHeader.StatusUnion.StatusWord       = 0;
-  // Update bits
-  myUpStreamHeader.StatusUnion.Status.DcPlugConnected       = (myMeasurments.DcPlugConnectionState);
-  myUpStreamHeader.StatusUnion.Status.ExternalPowerDetected = (myMeasurments.DcPlugVoltageExist);
-  // Fix network order
-  myUpStreamHeader.StatusUnion.StatusWord       = HTONL(myUpStreamHeader.StatusUnion.StatusWord);
-    
-  // Add relevant fields based on the message type
-  switch (messageOpCode)
-  {
-  case PROTOCOLAPP_GENERAL_ACK_EVENT:
-  case PROTOCOLAPP_GENERAL_NACK_EVENT:                   
-    // The ack response answers with the originating OpCode
-  //  myAck.OpCode = messageOpCode;
-    // Update the Message Length with the opCode related data structure
-  //  MessageLength += sizeof(myAck);
-    // update vars used later for copying opcode related data structure while forming the message tx buffer 
-  //  OpCodeRelatedStructurePtr = (uint8_t*)&myAck;
-  //  OpCodeRelatedStructureLength = sizeof(myAck);
-    break;
-    
-  case PROTOCOLAPP_POWER_BATT_HIGH_EVENT:
-  case PROTOCOLAPP_POWER_BATT_LOW_EVENT:                 
-  case PROTOCOLAPP_POWER_BATT_NORMAL_EVENT:              
-  case PROTOCOLAPP_POWER_DC_PLUG_CONNECTED_EVENT:        
-  case PROTOCOLAPP_POWER_DC_PLUG_DISCONECTED_EVENT:      
-  case PROTOCOLAPP_POWER_DC_FAULT_EVENT:        
-  case PROTOCOLAPP_POWER_DC_POWER_OFF_EVENT:
-  case PROTOCOLAPP_CHARGING_STARTED_EVENT:
-  case PROTOCOLAPP_CHARGING_ENDED_EVENT:
-  case PROTOCOLAPP_GENERAL_SYSTEM_UP_EVENT:
-  case PROTOCOLAPP_GENERAL_KEEP_ALIVE_EVENT:
-  case PROTOCOLAPP_GENERAL_OPC_EVENT:
-  case PROTOCOLAPP_CONFIGURATION_DOWNLOAD_REQ:
-  case PROTOCOLAPP_CONFIGURATION_CHANGE_EVENT:
-  case PROTOCOLAPP_MEASUREMENT_ABORTED_SHORT_PUSH_BUTTON_EVENT:
-  case PROTOCOLAPP_MEASUREMENT_ABORTED_BELT_OPEN_EVENT:
-  case PROTOCOLAPP_MEASUREMENT_ABORTED_BATTERY_LEVEL_EVENT:
-  case PROTOCOLAPP_MEASUREMENT_ABORTED_CHARGING_EVENT:
-  case PROTOCOLAPP_MEASUREMENT_ABORTED_TEMPERATURE_LEVEL_EVENT:
-  case PROTOCOLAPP_MEASUREMENT_ABORTED_TIMEOUT_EVENT:
-    // Simple Events has no accompanied data structure
-    break;
-  case PROTOCOLAPP_GENERAL_NURSE_MODE_END_EVENT:
-  case PROTOCOLAPP_MEASUREMENT_ENDED_EVENT:
-  case PROTOCOLAPP_MEASUREMENT_FAILED_EVENT:
-  case PROTOCOLAPP_FW_UPGRADE_CHUNK_REQ:
-    // Update the Message Length with the opCode related data structure
-    MessageLength += PayloadRelatedDataLength;
-    // update vars used later for copying opcode related data structure while forming the message tx buffer 
-    OpCodeRelatedStructurePtr = PayloadRelatedDataPtr;
-    OpCodeRelatedStructureLength = PayloadRelatedDataLength;
-
-    break;
-  default:
-      // Event not supported  
-      return(RETURNCODE_WRONG_INPUT_EVENT);
-  }
-
-    *ReturnedAddedPad = 0;
-  
-  // Pad message to %16 to allocate it now before the encryption and not to preform realloc
-  if(MessageLength % 16)
-  {
-    *ReturnedAddedPad = (((MessageLength/16) + 1)* 16) - MessageLength;
-    MessageLength = ((MessageLength/16) + 1)* 16;
-  }
-  else
-    MessageLength = MessageLength;
-  
-  cPtr = (uint8_t*)OutputBufferPtr + sizeof(aescbcProtcolHeader_t)+sizeof(DllHeader_t);
-  if(cPtr)
-  {
-    // Copy the headers and the Message type related structure to the allocated memory, Note, the ProtocolHeader starts after the DLL header 
-    // Copy the protocol header to the destination pointer
-    memcpy((uint8_t*)(cPtr), (uint8_t*)&myProtocolHeader, sizeof(myProtocolHeader));
-    // Copy the upstream header to the destination pointer
-    memcpy((uint8_t*)(cPtr+sizeof(myProtocolHeader)), (uint8_t*)&myUpStreamHeader, sizeof(myUpStreamHeader));
-    if(OpCodeRelatedStructureLength && OpCodeRelatedStructurePtr)
-      memcpy((uint8_t*)(cPtr+sizeof(myProtocolHeader) + sizeof(myUpStreamHeader)), (uint8_t*)(OpCodeRelatedStructurePtr), OpCodeRelatedStructureLength);
-
-//    // Free the OpCodeRelated allocated memory 
-//    if(PayloadRelatedDataPtr)
-//      vPortFree(PayloadRelatedDataPtr);
-    
-    // Update the calling function with the message ptr and length
-    if(ReturnedMessageLengthPtr)
-    {
-      *ReturnedMessageLengthPtr = MessageLength;
-       // Increment the numerator
-      MessageNumerator++;
-      return(RETURNCODE_OK);
-    }
-    else
-    {
-      // Return Error 
-      return(RETURNCODE_ERROR);
-    }
-  }
-  else
-  {
-      // Return Error 
-      return(RETURNCODE_ERROR);
-  }
-  
+	return(RETURNCODE_OK);
 }
 
 

@@ -13,10 +13,7 @@
 #include "configPrefs.h"
 #include "crc32.h"
 #include "config.h"
-#include "spiflash.h"
 #include "configdefaults.h"
-#include "sensor.h"
-#include "comm.h"
 #include "vlapmain.h"
 
 volatile const configNvramProductionDb_t configNvramProductionFlashDb __attribute__( ( section( ".productionDBSection") ) );
@@ -124,13 +121,13 @@ portTASK_FUNCTION(configTask, pvParameters )
               // Calculate the new CRC for the encrypted config sturct
               ((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->Crc32 = Crc32;
               // write request without callback as we want to set also the production config defaults
-              spiflashReqEnqueue(SPIFLASH_CMD_PROG_VIA_BUFF_1, SPIFLASH_CONFIG_START, 0, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, sizeof(configNvramConfigurationEncryptedDb_t), configSpiConfigUpdateCompletionWriteCallBack, false);
+//              spiflashReqEnqueue(SPIFLASH_CMD_PROG_VIA_BUFF_1, SPIFLASH_CONFIG_START, 0, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, sizeof(configNvramConfigurationEncryptedDb_t), configSpiConfigUpdateCompletionWriteCallBack, false);
               CONFIG_FSM_STATE_CHANGE(CONFIG_STATE_APP_CONFIG_FIRST_TIME_AFTER_JLINK_PROG, 1000);
             }
               break;
           case CONFIG_FSM_QUEUE_ENTRY_TYPE_NORMAL_CONFIG:
 
-              spiflashReqEnqueue(SPIFLASH_CMD_READ, SPIFLASH_CONFIG_START, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, 0, sizeof(configNvramConfigurationEncryptedDb_t), configSpiCompletionReadCallBack, false);
+//              spiflashReqEnqueue(SPIFLASH_CMD_READ, SPIFLASH_CONFIG_START, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, 0, sizeof(configNvramConfigurationEncryptedDb_t), configSpiCompletionReadCallBack, false);
               CONFIG_FSM_STATE_CHANGE(CONFIG_STATE_APP_CONFIG_SPI_READ_WAIT, 1000);
               break;
         default:
@@ -142,7 +139,7 @@ portTASK_FUNCTION(configTask, pvParameters )
         switch (QueueEntry.EntryQueueType)
         {
         case CONFIG_FSM_QUEUE_ENTRY_TYPE_SPIFLASH_WRITE_COMPLETED:
-          spiflashReqEnqueue(SPIFLASH_CMD_READ, SPIFLASH_CONFIG_START, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, 0, sizeof(configNvramConfigurationEncryptedDb_t), configSpiCompletionReadCallBack, false);
+//          spiflashReqEnqueue(SPIFLASH_CMD_READ, SPIFLASH_CONFIG_START, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, 0, sizeof(configNvramConfigurationEncryptedDb_t), configSpiCompletionReadCallBack, false);
           CONFIG_FSM_STATE_CHANGE(CONFIG_STATE_APP_CONFIG_SPI_READ_WAIT, 1000);
           break;
         case CONFIG_FSM_QUEUE_ENTRY_TYPE_TIMEOUT:
@@ -210,7 +207,7 @@ portTASK_FUNCTION(configTask, pvParameters )
           Crc32 =  crc32BuffCalc((uint8_t*)(((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)), 0, sizeof(configNvramConfigurationEncryptedDb_t) - 4);
           ((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->Crc32 = Crc32;
           // write request without callback as we want to set also the production config defaults
-          spiflashReqEnqueue(SPIFLASH_CMD_PROG_VIA_BUFF_1, SPIFLASH_CONFIG_START, 0, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, sizeof(configNvramConfigurationEncryptedDb_t), configSpiConfigUpdateCompletionWriteCallBack, false);
+//          spiflashReqEnqueue(SPIFLASH_CMD_PROG_VIA_BUFF_1, SPIFLASH_CONFIG_START, 0, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, sizeof(configNvramConfigurationEncryptedDb_t), configSpiConfigUpdateCompletionWriteCallBack, false);
           CONFIG_FSM_STATE_CHANGE(CONFIG_STATE_APP_CONFIG_UPDATE_SPI_WRITE_WAIT, 10);
           break;
         case CONFIG_FSM_QUEUE_ENTRY_TYPE_SPIFLASH_READ_COMPLETED:
@@ -226,7 +223,7 @@ portTASK_FUNCTION(configTask, pvParameters )
         switch (QueueEntry.EntryQueueType)
         {
         case CONFIG_FSM_QUEUE_ENTRY_TYPE_SPIFLASH_WRITE_COMPLETED:
-            spiflashReqEnqueue(SPIFLASH_CMD_READ, SPIFLASH_CONFIG_START, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, 0, sizeof(configNvramConfigurationEncryptedDb_t), configSpiConfigUpdateCompletionReadCallBack, false);
+//            spiflashReqEnqueue(SPIFLASH_CMD_READ, SPIFLASH_CONFIG_START, (uint8_t*)ConfigConfigEncryptedTempBuffPtr, 0, sizeof(configNvramConfigurationEncryptedDb_t), configSpiConfigUpdateCompletionReadCallBack, false);
             CONFIG_FSM_STATE_CHANGE(CONFIG_STATE_APP_CONFIG_UPDATE_SPI_READ_WAIT, 0);
           break;
         case CONFIG_FSM_QUEUE_ENTRY_TYPE_TIMEOUT:
@@ -248,7 +245,7 @@ portTASK_FUNCTION(configTask, pvParameters )
             memcpy(&configConfigurationDb, (uint8_t*)ConfigConfigTempBuffPtr, sizeof(configConfigurationDb_t));
             CONFIG_FSM_STATE_CHANGE(CONFIG_STATE_READY, 10);
             // Notify comm that config is set
-            commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_CONFIG_SET_DONE);
+//            commTaskEventSend(COMM_FSM_QUEUE_ENTRY_TYPE_CONFIG_SET_DONE);
           }
           else
           {

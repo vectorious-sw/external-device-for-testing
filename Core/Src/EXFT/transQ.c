@@ -9,7 +9,6 @@
 #include "vlapConfig.h"
 #include "pccommAppLayer.h"
 #include "timers.h"
-#include "lps22hb.h"
 //#include "bitband.h"
 #include "audit.h"
 #include "autoresonance.h"
