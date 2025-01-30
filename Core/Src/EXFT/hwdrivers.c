@@ -307,8 +307,8 @@ void hwdriversTimersStart()
 
 #endif
 
-  buzzerInit();
-  vibratorInit();
+//  buzzerInit();
+//  vibratorInit();
 
 
 }
@@ -419,7 +419,7 @@ void hwdriversModemAdcSignalSourceSelect(uint8_t AdcSignalSourceSelect)
 void hwdriversAdc2Config(void)
 {
 
-	HAL_ADC_Start_DMA(&hadc2, (uint16_t*)&ADCConvertedValueUnFiltered, (sizeof(ADCConvertedValueUnFiltered) / sizeof(uint16_t)) - 1);
+//	HAL_ADC_Start_DMA(&hadc2, (uint16_t*)&ADCConvertedValueUnFiltered, (sizeof(ADCConvertedValueUnFiltered) / sizeof(uint16_t)) - 1);
   // ADC for TX_MONITOR only TODO: Test this reference
 	HAL_ADC_Start_DMA(&hadc3, ((uint16_t*)&ADCConvertedValueUnFiltered) + 3, 1);
 
@@ -523,12 +523,12 @@ void hwdriversAdc2Config(void)
 
   hwdriversBattMeasureSeqState = HWDRIVERS_BATT_MEASURE_IDLE;
 
-  xTimerStart(xTimerCreate("adc2Timer", // Just a text name, not used by the kernel.
-                           4, // The timer period in ticks.
-                           pdTRUE, // The timers will auto-reload themselves when they expire.
-                           (void *)0,
-                           adc2TimerCallback 
-                           ), 0); 
+//  xTimerStart(xTimerCreate("adc2Timer", // Just a text name, not used by the kernel.
+//                           4, // The timer period in ticks.
+//                           pdTRUE, // The timers will auto-reload themselves when they expire.
+//                           (void *)0,
+//                           adc2TimerCallback
+//                           ), 0);
 
 
 
@@ -599,25 +599,25 @@ void hwdriversAdc2Config(void)
 
  
 
-static void adc2TimerCallback(TimerHandle_t pxTimer )
-{
-  switch(hwdriversBattMeasureSeqState)
-  {
-  case HWDRIVERS_BATT_MEASURE_IDLE:
-    // Delay one timer period before starting ADC2 measurement
-    hwdriversBattMeasureSeqState = HWDRIVERS_BATT_MEASURE_START;
-    break;
-    
-  case HWDRIVERS_BATT_MEASURE_START:
-    // Start ADC2 scan mode, the battery voltage measurement switch will be turned off by ADC2 DMA completion interrupt
-    HAL_ADC_Start_DMA(&hadc2, (uint16_t*)&ADCConvertedValueUnFiltered, (sizeof(ADCConvertedValueUnFiltered) / sizeof(uint16_t)) - 1);
-    // ADC for TX_MONITOR only TODO: Test this reference
-    HAL_ADC_Start_DMA(&hadc3, ((uint16_t*)&ADCConvertedValueUnFiltered) + 3, 1);
-    hwdriversBattMeasureSeqState = HWDRIVERS_BATT_MEASURE_IDLE;
-    break;
-  }
-  
-}
+//static void adc2TimerCallback(TimerHandle_t pxTimer )
+//{
+//  switch(hwdriversBattMeasureSeqState)
+//  {
+//  case HWDRIVERS_BATT_MEASURE_IDLE:
+//    // Delay one timer period before starting ADC2 measurement
+//    hwdriversBattMeasureSeqState = HWDRIVERS_BATT_MEASURE_START;
+//    break;
+//
+//  case HWDRIVERS_BATT_MEASURE_START:
+//    // Start ADC2 scan mode, the battery voltage measurement switch will be turned off by ADC2 DMA completion interrupt
+//    HAL_ADC_Start_DMA(&hadc2, (uint16_t*)&ADCConvertedValueUnFiltered, (sizeof(ADCConvertedValueUnFiltered) / sizeof(uint16_t)) - 1);
+//    // ADC for TX_MONITOR only TODO: Test this reference
+//    HAL_ADC_Start_DMA(&hadc3, ((uint16_t*)&ADCConvertedValueUnFiltered) + 3, 1);
+//    hwdriversBattMeasureSeqState = HWDRIVERS_BATT_MEASURE_IDLE;
+//    break;
+//  }
+//
+//}
 
 
 
@@ -632,9 +632,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
   /* Prevent unused argument(s) compilation warning */
 	if(hadc == &hadc1)
 		mainAdcDmaTransferCompleteIsr(1);
-	else
-		if(hadc == &hadc2)
-			adc2DmaCompleteIsr();
+//	else
+//		if(hadc == &hadc2)
+//			adc2DmaCompleteIsr();
 
 
   /* NOTE : This function Should not be modified, when the callback is needed,
@@ -692,7 +692,7 @@ void hwdriversI2cConfig(void)
   
   //chargerControl( CHARGER_CONTROL_ENABLE);
   
-  i2cworkSchedulerInit();
+//  i2cworkSchedulerInit();
   //ledsInit();
   //LedsSet(LEDS_INDEX_4, LEDS_COLOR_RED, LEDS_STATE_BLINK, 30, 0, NULL);
   //LedsSet(LEDS_INDEX_1, LEDS_COLOR_RED, LEDS_STATE_ON, 3, 7, NULL);
@@ -715,7 +715,7 @@ void hwdriversSpiFlashConfig(void)
   
   // Check the spiFlash is connected and verify its page size.
   // Use the client server mechanism but block till the operation completes
-  spiflashInit();
+//  spiflashInit();
 }
 
 
@@ -904,79 +904,79 @@ void hwdriversClockInit()
 void hwdriversUartsConfig(void)
 {
 
-	// Flags to mark the Uart Tx DMA is busy
-	Uart1Dma2Stream7Busy = false;
-	Uart2Dma1Stream6Busy = false;
-	Uart3Dma1Stream3Busy = false;
-	Uart6Dma2Stream6Busy = false;
-
-
-#if 0
-	USART_InitTypeDef USART_InitStructure;
-  
-  
-  // Flags to mark the Uart Tx DMA is busy
-  Uart1Dma2Stream7Busy = false;
-  Uart2Dma1Stream6Busy = false;
-  Uart3Dma1Stream3Busy = false;
-  Uart6Dma2Stream6Busy = false;
-
-  
-  /* USART resources configuration (Clock, GPIO pins and USART registers) ----*/
-  /* USART configured as follow:
-     - BaudRate = 115200 baud
-     - Word Length = 8 Bits
-     - One Stop Bit
-     - No parity
-     - Hardware flow control disabled (RTS and CTS signals)
-     - Receive and transmit enabled
-  */
-
-  USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-  USART_InitStructure.USART_StopBits = USART_StopBits_1;
-  USART_InitStructure.USART_Parity = USART_Parity_No;
-  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-  
-  // USART1 configuration - Modem GUI
-  USART_InitStructure.USART_BaudRate = 250000;
-  USART_Init(USART1, &USART_InitStructure);
-  // Enable the USART1
-  USART_Cmd(USART1, ENABLE);
-
-  // USART2 configuration - Cellular Modem
-  USART_InitStructure.USART_BaudRate = 250000;
-  USART_Init(USART2, &USART_InitStructure);
-  // Enable the USART2
-  USART_Cmd(USART2, ENABLE);
-
-  // USART3 configuration - BLE
-  USART_InitStructure.USART_BaudRate = 115200;
-  USART_Init(USART3, &USART_InitStructure);
-  // Enable the USART3
-  USART_Cmd(USART3, ENABLE);
-
-  // USART6 configuration - RS422
-  USART_InitStructure.USART_BaudRate = 250000;
-  USART_Init(USART6, &USART_InitStructure);
-  // Enable the USART6
-  USART_Cmd(USART6, ENABLE);
-  
-#endif
-  
-
-//  Uart1CicularBufferIndex=0;
-  Uart2CicularBufferIndex=0;
-  Uart3CicularBufferIndex=0;
-  Uart6CicularBufferIndex=0;
-
-
-//  HAL_UART_Receive_DMA(&huart1, Uart1RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
-#ifdef USE_CELLMODEM
-  HAL_UART_Receive_DMA(&huart2, Uart2RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
-#endif
-  HAL_UART_Receive_DMA(&huart3, Uart3RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
-  HAL_UART_Receive_DMA(&huart6, Uart6RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//	// Flags to mark the Uart Tx DMA is busy
+//	Uart1Dma2Stream7Busy = false;
+//	Uart2Dma1Stream6Busy = false;
+//	Uart3Dma1Stream3Busy = false;
+//	Uart6Dma2Stream6Busy = false;
+//
+//
+//#if 0
+//	USART_InitTypeDef USART_InitStructure;
+//
+//
+//  // Flags to mark the Uart Tx DMA is busy
+//  Uart1Dma2Stream7Busy = false;
+//  Uart2Dma1Stream6Busy = false;
+//  Uart3Dma1Stream3Busy = false;
+//  Uart6Dma2Stream6Busy = false;
+//
+//
+//  /* USART resources configuration (Clock, GPIO pins and USART registers) ----*/
+//  /* USART configured as follow:
+//     - BaudRate = 115200 baud
+//     - Word Length = 8 Bits
+//     - One Stop Bit
+//     - No parity
+//     - Hardware flow control disabled (RTS and CTS signals)
+//     - Receive and transmit enabled
+//  */
+//
+//  USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+//  USART_InitStructure.USART_StopBits = USART_StopBits_1;
+//  USART_InitStructure.USART_Parity = USART_Parity_No;
+//  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+//  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+//
+//  // USART1 configuration - Modem GUI
+//  USART_InitStructure.USART_BaudRate = 250000;
+//  USART_Init(USART1, &USART_InitStructure);
+//  // Enable the USART1
+//  USART_Cmd(USART1, ENABLE);
+//
+//  // USART2 configuration - Cellular Modem
+//  USART_InitStructure.USART_BaudRate = 250000;
+//  USART_Init(USART2, &USART_InitStructure);
+//  // Enable the USART2
+//  USART_Cmd(USART2, ENABLE);
+//
+//  // USART3 configuration - BLE
+//  USART_InitStructure.USART_BaudRate = 115200;
+//  USART_Init(USART3, &USART_InitStructure);
+//  // Enable the USART3
+//  USART_Cmd(USART3, ENABLE);
+//
+//  // USART6 configuration - RS422
+//  USART_InitStructure.USART_BaudRate = 250000;
+//  USART_Init(USART6, &USART_InitStructure);
+//  // Enable the USART6
+//  USART_Cmd(USART6, ENABLE);
+//
+//#endif
+//
+//
+////  Uart1CicularBufferIndex=0;
+//  Uart2CicularBufferIndex=0;
+//  Uart3CicularBufferIndex=0;
+//  Uart6CicularBufferIndex=0;
+//
+//
+////  HAL_UART_Receive_DMA(&huart1, Uart1RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//#ifdef USE_CELLMODEM
+//  HAL_UART_Receive_DMA(&huart2, Uart2RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//#endif
+//  HAL_UART_Receive_DMA(&huart3, Uart3RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//  HAL_UART_Receive_DMA(&huart6, Uart6RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
 }
 
 
@@ -1001,120 +1001,120 @@ void hwdriversReInitUart1PcRxDma()
 ******************************************************************************/
 void hwdriversUartsDmaRxConfig()
 {
-#if 0
-	DMA_InitTypeDef DMA_InitStructure;
-  
-  // USART1_RX, DMA2, Stream2,  Channel 4, see DM00031020-RefManual, Rev 1, page 308
-  DMA_DeInit(DMA2_Stream2);
-  
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART1->DR;
-  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Uart1RxDmaCicularBuffer;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-  DMA_InitStructure.DMA_BufferSize = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
-  DMA_InitStructure.DMA_Channel = DMA_Channel_4;
-  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
-  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-  // Init DMA2 
-  DMA_Init(DMA2_Stream2, &DMA_InitStructure);
-  // USART1 Rx will drive DMA2 dma Request signal
-  USART_DMACmd(USART1, USART_DMAReq_Rx, ENABLE);
-  // Enable DMA Stream Transfer Complete interrupt (When all data has been transfferred)
-  DMA_ITConfig(DMA2_Stream2, DMA_IT_TC, ENABLE);
-  // Start DMA2: Will work in the background filling the buffer in circular mode
-  DMA_Cmd(DMA2_Stream2, ENABLE);
-
-  
-  // USART2_RX, DMA1, Stream5,  Channel 4, see DM00031020-RefManual, Rev 1, page 308
-  DMA_DeInit(DMA1_Stream5);
-  
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART2->DR;
-  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Uart2RxDmaCicularBuffer;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-  DMA_InitStructure.DMA_BufferSize = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
-  DMA_InitStructure.DMA_Channel = DMA_Channel_4;
-  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
-  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-  // Init DMA1 
-  DMA_Init(DMA1_Stream5, &DMA_InitStructure);
-  // USART2 Rx will drive DMA2 dma Request signal
-  USART_DMACmd(USART2, USART_DMAReq_Rx, ENABLE);
-  // Enable DMA Stream Transfer Complete interrupt (When all data has been transfferred)
-  DMA_ITConfig(DMA1_Stream5, DMA_IT_TC, ENABLE);
-  // Start DMA1: Will work in the background filling the buffer in circular mode
-  DMA_Cmd(DMA1_Stream5, ENABLE);
-  
-
-  // USART3_RX, DMA1, Stream1,  Channel 4, see DM00031020-RefManual, Rev 1, page 308
-  DMA_DeInit(DMA1_Stream1);
-  
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART3->DR;
-  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Uart3RxDmaCicularBuffer;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-  DMA_InitStructure.DMA_BufferSize = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
-  DMA_InitStructure.DMA_Channel = DMA_Channel_4;
-  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
-  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-  // Init DMA1 
-  DMA_Init(DMA1_Stream1, &DMA_InitStructure);
-  // USART3 Rx will drive DMA1 dma Request signal
-  USART_DMACmd(USART3, USART_DMAReq_Rx, ENABLE);
-  // Enable DMA Stream Transfer Complete interrupt (When all data has been transfferred)
-  DMA_ITConfig(DMA1_Stream1, DMA_IT_TC, DISABLE);
-  // Start DMA2: Will work in the background filling the buffer in circular mode
-  DMA_Cmd(DMA1_Stream1, ENABLE);
-  
-  // USART6_RX, DMA2, Stream1,  Channel 5, see DM00031020-RefManual, Rev 1, page 308
-  DMA_DeInit(DMA2_Stream1);
-  
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART6->DR;
-  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Uart6RxDmaCicularBuffer;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-  DMA_InitStructure.DMA_BufferSize = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH;
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
-  DMA_InitStructure.DMA_Channel = DMA_Channel_5;
-  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
-  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-  // Init DMA2 
-  DMA_Init(DMA2_Stream1, &DMA_InitStructure);
-  // USART6 Rx will drive DMA2 dma Request signal
-  USART_DMACmd(USART6, USART_DMAReq_Rx, ENABLE);
-  // Enable DMA Stream Transfer Complete interrupt (When all data has been transfferred)
-  DMA_ITConfig(DMA2_Stream1, DMA_IT_TC, ENABLE);
-  // Start DMA2: Will work in the background filling the buffer in circular mode
-  DMA_Cmd(DMA2_Stream1, ENABLE);
- 
-#endif
-
-
-  //HAL_UART_Receive_DMA(&huart1, Uart1RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
-#ifdef USE_CELLMODEM
-  HAL_UART_Receive_DMA(&huart2, Uart2RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
-#endif
-  HAL_UART_Receive_DMA(&huart3, Uart3RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
-  //HAL_UART_Receive_DMA(&huart6, Uart6RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//#if 0
+//	DMA_InitTypeDef DMA_InitStructure;
+//
+//  // USART1_RX, DMA2, Stream2,  Channel 4, see DM00031020-RefManual, Rev 1, page 308
+//  DMA_DeInit(DMA2_Stream2);
+//
+//  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART1->DR;
+//  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Uart1RxDmaCicularBuffer;
+//  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+//  DMA_InitStructure.DMA_BufferSize = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH;
+//  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+//  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+//  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+//  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+//  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+//  DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
+//  DMA_InitStructure.DMA_Channel = DMA_Channel_4;
+//  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+//  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+//  // Init DMA2
+//  DMA_Init(DMA2_Stream2, &DMA_InitStructure);
+//  // USART1 Rx will drive DMA2 dma Request signal
+//  USART_DMACmd(USART1, USART_DMAReq_Rx, ENABLE);
+//  // Enable DMA Stream Transfer Complete interrupt (When all data has been transfferred)
+//  DMA_ITConfig(DMA2_Stream2, DMA_IT_TC, ENABLE);
+//  // Start DMA2: Will work in the background filling the buffer in circular mode
+//  DMA_Cmd(DMA2_Stream2, ENABLE);
+//
+//
+//  // USART2_RX, DMA1, Stream5,  Channel 4, see DM00031020-RefManual, Rev 1, page 308
+//  DMA_DeInit(DMA1_Stream5);
+//
+//  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART2->DR;
+//  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Uart2RxDmaCicularBuffer;
+//  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+//  DMA_InitStructure.DMA_BufferSize = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH;
+//  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+//  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+//  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+//  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+//  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+//  DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
+//  DMA_InitStructure.DMA_Channel = DMA_Channel_4;
+//  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+//  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+//  // Init DMA1
+//  DMA_Init(DMA1_Stream5, &DMA_InitStructure);
+//  // USART2 Rx will drive DMA2 dma Request signal
+//  USART_DMACmd(USART2, USART_DMAReq_Rx, ENABLE);
+//  // Enable DMA Stream Transfer Complete interrupt (When all data has been transfferred)
+//  DMA_ITConfig(DMA1_Stream5, DMA_IT_TC, ENABLE);
+//  // Start DMA1: Will work in the background filling the buffer in circular mode
+//  DMA_Cmd(DMA1_Stream5, ENABLE);
+//
+//
+//  // USART3_RX, DMA1, Stream1,  Channel 4, see DM00031020-RefManual, Rev 1, page 308
+//  DMA_DeInit(DMA1_Stream1);
+//
+//  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART3->DR;
+//  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Uart3RxDmaCicularBuffer;
+//  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+//  DMA_InitStructure.DMA_BufferSize = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH;
+//  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+//  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+//  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+//  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+//  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+//  DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
+//  DMA_InitStructure.DMA_Channel = DMA_Channel_4;
+//  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+//  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+//  // Init DMA1
+//  DMA_Init(DMA1_Stream1, &DMA_InitStructure);
+//  // USART3 Rx will drive DMA1 dma Request signal
+//  USART_DMACmd(USART3, USART_DMAReq_Rx, ENABLE);
+//  // Enable DMA Stream Transfer Complete interrupt (When all data has been transfferred)
+//  DMA_ITConfig(DMA1_Stream1, DMA_IT_TC, DISABLE);
+//  // Start DMA2: Will work in the background filling the buffer in circular mode
+//  DMA_Cmd(DMA1_Stream1, ENABLE);
+//
+//  // USART6_RX, DMA2, Stream1,  Channel 5, see DM00031020-RefManual, Rev 1, page 308
+//  DMA_DeInit(DMA2_Stream1);
+//
+//  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART6->DR;
+//  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Uart6RxDmaCicularBuffer;
+//  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+//  DMA_InitStructure.DMA_BufferSize = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH;
+//  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+//  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+//  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+//  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+//  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+//  DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
+//  DMA_InitStructure.DMA_Channel = DMA_Channel_5;
+//  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+//  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+//  // Init DMA2
+//  DMA_Init(DMA2_Stream1, &DMA_InitStructure);
+//  // USART6 Rx will drive DMA2 dma Request signal
+//  USART_DMACmd(USART6, USART_DMAReq_Rx, ENABLE);
+//  // Enable DMA Stream Transfer Complete interrupt (When all data has been transfferred)
+//  DMA_ITConfig(DMA2_Stream1, DMA_IT_TC, ENABLE);
+//  // Start DMA2: Will work in the background filling the buffer in circular mode
+//  DMA_Cmd(DMA2_Stream1, ENABLE);
+//
+//#endif
+//
+//
+//  //HAL_UART_Receive_DMA(&huart1, Uart1RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//#ifdef USE_CELLMODEM
+//  HAL_UART_Receive_DMA(&huart2, Uart2RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//#endif
+//  HAL_UART_Receive_DMA(&huart3, Uart3RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//  //HAL_UART_Receive_DMA(&huart6, Uart6RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
 
 
 }
@@ -1412,41 +1412,41 @@ void hwdriversUart2DmaTx(uint8_t *s, uint16_t length)
 void hwdriversUart3DmaTx(uint8_t *s, uint16_t length)
 {
 
-	HAL_UART_Transmit_DMA(&huart3, s, length);
-	Uart3Dma1Stream3Busy = true;
-#if 0
-
-	MA_InitTypeDef DMA_InitStructure;
- 
-  Uart3Dma1Stream3Busy = true;
-
-  // USART3_TX, DMA1, Stream3,  Channel 4, see DM00031020-RefManual, Rev 1, page 308
-  DMA_DeInit(DMA1_Stream3);
-  DMA_StructInit (&DMA_InitStructure);
-  DMA_InitStructure.DMA_Channel = DMA_Channel_4;
-  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)(s);
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART3->DR;
-  DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-  DMA_InitStructure.DMA_BufferSize = length; 
-  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
-  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-  DMA_Init(DMA1_Stream3, &DMA_InitStructure);
-  
-  // Enable DMA transfer complete interrupt
-  // void DMA1_Stream3_IRQHandler(void) // USART3_TX
-  DMA_ITConfig(DMA1_Stream3, DMA_IT_TC, ENABLE);
-  USART_DMACmd(USART3, USART_DMAReq_Tx, ENABLE);
-  
-  // Enable DMA1_Stream3
-  DMA_Cmd(DMA1_Stream3, ENABLE);
-
-#endif
+//	HAL_UART_Transmit_DMA(&huart3, s, length);
+//	Uart3Dma1Stream3Busy = true;
+//#if 0
+//
+//	MA_InitTypeDef DMA_InitStructure;
+//
+//  Uart3Dma1Stream3Busy = true;
+//
+//  // USART3_TX, DMA1, Stream3,  Channel 4, see DM00031020-RefManual, Rev 1, page 308
+//  DMA_DeInit(DMA1_Stream3);
+//  DMA_StructInit (&DMA_InitStructure);
+//  DMA_InitStructure.DMA_Channel = DMA_Channel_4;
+//  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)(s);
+//  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART3->DR;
+//  DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+//  DMA_InitStructure.DMA_BufferSize = length;
+//  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+//  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+//  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+//  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+//  DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+//  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+//  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+//  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+//  DMA_Init(DMA1_Stream3, &DMA_InitStructure);
+//
+//  // Enable DMA transfer complete interrupt
+//  // void DMA1_Stream3_IRQHandler(void) // USART3_TX
+//  DMA_ITConfig(DMA1_Stream3, DMA_IT_TC, ENABLE);
+//  USART_DMACmd(USART3, USART_DMAReq_Tx, ENABLE);
+//
+//  // Enable DMA1_Stream3
+//  DMA_Cmd(DMA1_Stream3, ENABLE);
+//
+//#endif
 }  
   
 
@@ -1780,22 +1780,22 @@ void hwdriversUart2DmaRxDataProcess()
 ******************************************************************************/
 void hwdriversUart3DmaRxDataProcess()
 {
-  uint16_t DmaBufferHwIndex = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);
-  uint16_t i;
-  // 
-  if(Uart3CicularBufferIndex < DmaBufferHwIndex)
-  {
-    for(i=0; i< DmaBufferHwIndex-Uart3CicularBufferIndex; i++) 
-      bleRxFsm(UARTDLL_FSM_STIMULI_INCOMMING_CHAR, Uart3RxDmaCicularBuffer[Uart3CicularBufferIndex+i]);
-  }
-  if(Uart3CicularBufferIndex > DmaBufferHwIndex)
-  {
-    for(i=0; i< UART_RX_DMA_CIRCULAR_BUFFER_LEGTH-Uart3CicularBufferIndex; i++) 
-      bleRxFsm(UARTDLL_FSM_STIMULI_INCOMMING_CHAR, Uart3RxDmaCicularBuffer[Uart3CicularBufferIndex+i]);
-    for(i=0; i< DmaBufferHwIndex; i++) 
-      bleRxFsm(UARTDLL_FSM_STIMULI_INCOMMING_CHAR, Uart3RxDmaCicularBuffer[i]);
-  }
-  Uart3CicularBufferIndex = DmaBufferHwIndex;
+//  uint16_t DmaBufferHwIndex = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);
+//  uint16_t i;
+//  //
+////  if(Uart3CicularBufferIndex < DmaBufferHwIndex)
+////  {
+////    for(i=0; i< DmaBufferHwIndex-Uart3CicularBufferIndex; i++)
+//////      bleRxFsm(UARTDLL_FSM_STIMULI_INCOMMING_CHAR, Uart3RxDmaCicularBuffer[Uart3CicularBufferIndex+i]);
+////  }
+////  if(Uart3CicularBufferIndex > DmaBufferHwIndex)
+////  {
+////    for(i=0; i< UART_RX_DMA_CIRCULAR_BUFFER_LEGTH-Uart3CicularBufferIndex; i++)
+//////      bleRxFsm(UARTDLL_FSM_STIMULI_INCOMMING_CHAR, Uart3RxDmaCicularBuffer[Uart3CicularBufferIndex+i]);
+////    for(i=0; i< DmaBufferHwIndex; i++)
+//////      bleRxFsm(UARTDLL_FSM_STIMULI_INCOMMING_CHAR, Uart3RxDmaCicularBuffer[i]);
+////  }
+//  Uart3CicularBufferIndex = DmaBufferHwIndex;
 }
 
 

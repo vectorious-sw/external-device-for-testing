@@ -59,8 +59,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define MAIN_OSC_ENABLE_Pin GPIO_PIN_1
 #define MAIN_OSC_ENABLE_GPIO_Port GPIOC
-#define TX_MONITOR_Pin GPIO_PIN_2
-#define TX_MONITOR_GPIO_Port GPIOC
 #define EN_FB_IN_HIGH_Pin GPIO_PIN_1
 #define EN_FB_IN_HIGH_GPIO_Port GPIOA
 #define MEAS_3_3_Pin GPIO_PIN_2

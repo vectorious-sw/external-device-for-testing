@@ -294,7 +294,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
         }
         
         MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_SHORT_PRESS;
-        eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_SHORT_PUSH_BUTTON_EVENT,0,0,0);
+//        eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_SHORT_PUSH_BUTTON_EVENT,0,0,0);
         measureIdleStateChange(100, sendEndMeasureEvent);
         // Assume unknown UniqueIdSerialNumber
         pccpmmAppLayerStruct.VmicRegisters3.UniqueIdSerialNumber = TYPES_ENDIAN16_CHANGE(0);
@@ -383,7 +383,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
               if(auditAbiantTemperatureStateGet()!=AUDIT_TEMPERATURE_NORMAL)
               {
                 MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_OVER_TEMPERATURE;
-                eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_TEMPERATURE_LEVEL_EVENT,0,0,0);
+//                eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_TEMPERATURE_LEVEL_EVENT,0,0,0);
                 sprintf(PrintBuff, "Tx State temperature Out of range");
                 vlapmainDebugLog(PrintBuff);
                 
@@ -403,7 +403,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
             else
             {
               MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_SHORT_PRESS;
-              eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_SHORT_PUSH_BUTTON_EVENT,0,0,0);
+//              eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_SHORT_PUSH_BUTTON_EVENT,0,0,0);
               measureIdleStateChange(1, 0);
             }
             break;
@@ -496,7 +496,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
             //if (auditNurseModeStatusGet() == AUDIT_NURSE_MODE_DISABLED)
             if(QueueEntry.MeasureRequest == MEASURE_PB_START)
             {
-              buzzerOff();
+//              buzzerOff();
               pccommapplayerTransmitterControl(TYPES_DISABLE);
               NurseModeStopTime = rtcEpochGet();
               MEASURE_FSM_STATE_CHANGE(MEASURE_NURSE_MODE_END_WAIT, 100);
@@ -604,7 +604,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
                 vlapmainDebugLog(PrintBuff);
                 
                 MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_LOW_BATTERY;
-                eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_BATTERY_LEVEL_EVENT,0,0,0);
+//                eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_BATTERY_LEVEL_EVENT,0,0,0);
                 
                 measureIdleStateChange(10, 0);
                 break;
@@ -621,7 +621,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
                 vlapmainDebugLog("Belt is open, aborting measure");
                 sprintf(PrintBuff, "Belt is open, aborting measure");
                 // In case that belt is open, go to idle and indicate on it
-                eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_BELT_OPEN_EVENT,0,0,0);
+//                eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_BELT_OPEN_EVENT,0,0,0);
                 MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_BELT_OPEN;
                 measureIdleStateChange(10, 0);
                 break;
@@ -645,7 +645,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
 //                measureAccZStart = sensorAccGet(SENSOR_AXIS_Z);
                 
                 // Start capturing P2P for accelerometer axis
-                sensorStartCaptureP2PAcc(measureAccXStart, measureAccYStart, measureAccZStart);
+//                sensorStartCaptureP2PAcc(measureAccXStart, measureAccYStart, measureAccZStart);
                 
                 // Start timout timer for measurement sequence.
                 xTimerChangePeriod(measureTimeoutTimerHandler, configConfigurationDb.MeasurementTimeoutSeconds * 1000, 100); 
@@ -675,7 +675,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
 //                measureAccZStart = sensorAccGet(SENSOR_AXIS_Z);
                 
                 // Start capturing P2P for accelerometer axis
-                sensorStartCaptureP2PAcc(measureAccXStart, measureAccYStart, measureAccZStart);
+//                sensorStartCaptureP2PAcc(measureAccXStart, measureAccYStart, measureAccZStart);
                 
                 // Start timout timer for measurement sequence.
                 xTimerChangePeriod(measureTimeoutTimerHandler, configConfigurationDb.MeasurementTimeoutSeconds * 1000, 100); 
@@ -2243,7 +2243,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
               MeasurementsResults.Psl = HTONS(CurrrentPskLevel);
               MeasurementsResults.MeasurementGeneralStatus = MeasureFsmState;
               MeasurementsResults.MeasurementFailureReason = 0;
-              MeasurementsResults.AbsolutePressure = HTONL((uint32_t)sensorAbsolutePressureGet());
+//              MeasurementsResults.AbsolutePressure = HTONL((uint32_t)sensorAbsolutePressureGet());
               // Ge tx monitor
               hwdriversTxMonitorGet(&txMonitor);
               // Get current.
@@ -2285,7 +2285,7 @@ portTASK_FUNCTION(measureTask, pvParameters )
                 MeasurementsResults.SequenceNumber = HTONL(configConfigurationDb.MeasurementSequence);
               
                //              vlapmainDebugLog("Event written to Log memory, turn off the device");
-              eventsEventWrite(0, 0, PROTOCOLAPP_MEASUREMENT_ENDED_EVENT, (char*)&MeasurementsResults, sizeof(ProtocolappMeasurementEndedEvent_t) - measureSamplesReducedBySeqNumber(), 0);
+//              eventsEventWrite(0, 0, PROTOCOLAPP_MEASUREMENT_ENDED_EVENT, (char*)&MeasurementsResults, sizeof(ProtocolappMeasurementEndedEvent_t) - measureSamplesReducedBySeqNumber(), 0);
               pccommapplayerTransmitterControl(TYPES_DISABLE);
 #ifdef 	  MEASURE_PUSH_BUTTON_SIMULATE
               MEASURE_FSM_STATE_CHANGE(MEASURE_END_TEST_WAIT, 120000);
@@ -2368,7 +2368,7 @@ ReturnCode_T measureIdleStateChange(uint16_t QueueWairTimeoutIn1mSec, uint8_t se
     vlapmainDebugLog(PrintBuff);
     
     // Stop capturing P2P of accelerometer
-    sensorStopCaptureP2PAcc();
+//    sensorStopCaptureP2PAcc();
     // Save measurement end time
     measureStopTime = rtcEpochGet();
                 
@@ -2376,7 +2376,7 @@ ReturnCode_T measureIdleStateChange(uint16_t QueueWairTimeoutIn1mSec, uint8_t se
     MeasurementsResults.Psl = HTONS(CurrrentPskLevel);
     MeasurementsResults.MeasurementGeneralStatus = MeasureFsmState;
     //MeasurementsResults.MeasurementFailureReason = 0;
-    MeasurementsResults.AbsolutePressure = HTONL((uint32_t)sensorAbsolutePressureGet());
+    MeasurementsResults.AbsolutePressure = 0;//HTONL((uint32_t)sensorAbsolutePressureGet());
     MeasurementsResults.RelaysState = HTONS(autoresonanceRelaysStateGet());
     MeasurementsResults.RelaysStateP2P = HTONS(autoresonanceP2PGet());
     uint16_t ReturnedEffectiveBeltResistance;
@@ -2413,7 +2413,7 @@ ReturnCode_T measureIdleStateChange(uint16_t QueueWairTimeoutIn1mSec, uint8_t se
     else 
       MeasurementsResults.SequenceNumber = HTONL(configConfigurationDb.MeasurementSequence);
     
-    eventsEventWrite(0, 0, PROTOCOLAPP_MEASUREMENT_FAILED_EVENT, (char*)&MeasurementsResults, sizeof(ProtocolappMeasurementEndedEvent_t) - measureSamplesReducedBySeqNumber(), 0);    
+//    eventsEventWrite(0, 0, PROTOCOLAPP_MEASUREMENT_FAILED_EVENT, (char*)&MeasurementsResults, sizeof(ProtocolappMeasurementEndedEvent_t) - measureSamplesReducedBySeqNumber(), 0);
   }
   
   pccommapplayerTransmitterControl(TYPES_DISABLE);
@@ -2967,7 +2967,7 @@ ReturnCode_T  measurmentNurseModeEventBuildAndCreate()
   
   if(Ptr)
   {
-    eventsEventWrite(0, 0, PROTOCOLAPP_GENERAL_NURSE_MODE_END_EVENT, (char*)Ptr, sizeof(ProtocolappNurseModeEndEvent_t), 1);
+//    eventsEventWrite(0, 0, PROTOCOLAPP_GENERAL_NURSE_MODE_END_EVENT, (char*)Ptr, sizeof(ProtocolappNurseModeEndEvent_t), 1);
   }
   
   return(RETURNCODE_OK);
@@ -3019,7 +3019,7 @@ uint8_t measurementConditionCheck()
   if(auditBatteryStatusGet()!=AUDIT_BV_OK)
   {
     MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_LOW_BATTERY;
-    eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_BATTERY_LEVEL_EVENT,0,0,0);
+//    eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_BATTERY_LEVEL_EVENT,0,0,0);
     strcat(Ptr, "BATT Out of range ");
     MyReturn |= 16;
   }
@@ -3027,7 +3027,7 @@ uint8_t measurementConditionCheck()
   if(auditAbiantTemperatureStateGet() != AUDIT_TEMPERATURE_NORMAL)
   {
     MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_OVER_TEMPERATURE;
-    eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_TEMPERATURE_LEVEL_EVENT,0,0,0);
+//    eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_TEMPERATURE_LEVEL_EVENT,0,0,0);
     strcat(Ptr, "Ambient temperature Out of range ");
     MyReturn |= 2;
   }
@@ -3036,7 +3036,7 @@ uint8_t measurementConditionCheck()
   if(auditTxTemperatureOverheatCheck() != AUDIT_TEMPERATURE_NORMAL)
   {
     MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_OVER_TEMPERATURE;
-    eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_TEMPERATURE_LEVEL_EVENT,0,0,0);
+//    eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_TEMPERATURE_LEVEL_EVENT,0,0,0);
     strcat(Ptr, "Tx temperature Out of range ");
     MyReturn |= 4;
   }
@@ -3056,7 +3056,7 @@ uint8_t measurementConditionCheck()
   {
     case AUDIT_BELT_OPEN:
       MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_BELT_OPEN;
-      eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_BELT_OPEN_EVENT,0,0,0);
+//      eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_BELT_OPEN_EVENT,0,0,0);
       strcat(Ptr, "Belt open problem");
       MyReturn |= 0x08;
       break;
@@ -3151,7 +3151,7 @@ ReturnCode_T measureNurseModeIndication(uint32_t peakToPeakSignalMeasure, uint32
   {
     freq = 200;
     NurseModeLastFreq = freq;
-    buzzerOn(freq);
+//    buzzerOn(freq);
     NurseModeFirstBuzzerSet = 0;
   }
   else
@@ -3186,7 +3186,7 @@ ReturnCode_T measureNurseModeIndication(uint32_t peakToPeakSignalMeasure, uint32
         NurseModeFreqChangeCounterDown = 0;  
         //printf("Changed ! last freq is: %d, new freq is : %d\n", NurseModeLastFreq, freq);
         NurseModeLastFreq = freq; 
-        buzzerFreqSet(freq);
+//        buzzerFreqSet(freq);
         
         if(nurseModeLevel != MEASURE_POWER_LEVEL0)
         {
@@ -3450,7 +3450,7 @@ void measureTimeoutTimerCallback()
   }
   
   MeasurementsResults.MeasurementFailureReason = MEASURE_FAILURE_TOTAL_TIMEOUT; 
-  eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_TIMEOUT_EVENT,0,0,0);
+//  eventsEventWrite(0,0,PROTOCOLAPP_MEASUREMENT_ABORTED_TIMEOUT_EVENT,0,0,0);
   measureIdleStateChange(100, sendEndMeasureEvent);
 }
 
@@ -3494,7 +3494,7 @@ void measureEndMeasurementSeq()
 //  vibratorRequestToQueueAdd(VIBRATOR_OPTION2);
   autoresonanceControl(AUTORESONANCE_CONTROL_OFF);
   // Stop capturing P2P of accelerometer
-  sensorStopCaptureP2PAcc();
+//  sensorStopCaptureP2PAcc();
   MEASURE_FSM_STATE_CHANGE(MEASURE_PUBLISH_RESULTS_WAIT, 100);
 }
 

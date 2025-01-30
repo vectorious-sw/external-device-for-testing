@@ -21,7 +21,6 @@ void pcccommAppLayerSpiFlashReadResponseMsgBuildCallBack();
 void pcccommAppLayerSpiFlashWriteResponseMsgBuildCallBack();
 void pcccommAppLayerBleBootloaderWriteResponseMsgBuildCallBack(char* data, uint8_t length);
 void pcccommAppLayerSpiFlashWriteResponseCRC32CallBack(SPIMemoryCommand_T memoryType, uint8_t result);
-void pcccommAppLayerSpiFugCrcCheckCompletionCallBack(int8_t CompletionStatus);
 
 // V A R S 
 pccpmmAppLayerStruct_T  pccpmmAppLayerStruct;
@@ -838,35 +837,6 @@ void   pcccommAppLayerBuildResponseMsg(uint8_t * payloadPtr, uint8_t MsgLength, 
   //uartdllTxQueueEnqueue(UARTDLL_UART_1_VTASGUI, ResponseBuffer, MsgLength+2, false);
 }
 
-/******************************************************************************
- * @brief  void pcccommAppLayerSpiFugCrcCheckCompletionCallBack(int8_t CompletionStatus)
- * @param  
- * @retval 
- ******************************************************************************/
-void pcccommAppLayerSpiFugCrcCheckCompletionCallBack(int8_t CompletionStatus)
-{
-//  uint8_t bufferSize = 1;
-//  
-//  GenericBufferPtr = pvPortMalloc(bufferSize);
-//  GenericBufferPayLoadLength = bufferSize;
-//  
-//  *GenericBufferPtr = CompletionStatus;
-  
-  uint8_t CheckSum;
-   
-  CheckSum = ResponseBuffer[0] = 'M';
-  // TODO: add here the result
-  ResponseBuffer[1] = CompletionStatus;
-  CheckSum += ResponseBuffer[1];
-  ResponseBuffer[2] = CheckSum;
-  
-  // Send the buffer
-  // Send the buffer to the GUI 
-  CDC_Transmit_HS(ResponseBuffer, 3);
-  //TM_USB_VCP_Send(ResponseBuffer, 3);
-  // uartdllTxQueueEnqueue(UARTDLL_UART_1_VTASGUI, ResponseBuffer, 3, false);
-  // There is no memory to free because we are using the cPtr which is a const buffer
-}
 
 /******************************************************************************
  * @brief  void pcccommAppLayerBleBootloaderWriteResponseMsgBuildCallBack(char* data, uint8_t length)
@@ -885,7 +855,7 @@ void pcccommAppLayerBleBootloaderWriteResponseMsgBuildCallBack(char* receivedDat
   
   // Send the buffer
   // Send the buffer to the GUI 
-  CDC_Transmit_HS(ResponseBuffer, 3);
+//  CDC_Transmit_HS(ResponseBuffer, 3);
   //TM_USB_VCP_Send(ResponseBuffer, 3);
   //uartdllTxQueueEnqueue(UARTDLL_UART_1_VTASGUI, ResponseBuffer, 3, false);
   // There is no memory to free because we are using the cPtr which is a const buffer
@@ -908,7 +878,7 @@ void pcccommAppLayerSpiFlashWriteResponseMsgBuildCallBack()
   
   // Send the buffer
   // Send the buffer to the GUI
-  CDC_Transmit_HS(ResponseBuffer, 3);
+//  CDC_Transmit_HS(ResponseBuffer, 3);
   //TM_USB_VCP_Send(ResponseBuffer, 3);
   //uartdllTxQueueEnqueue(UARTDLL_UART_1_VTASGUI, ResponseBuffer, 3, false);
   // There is no memory to free because we are using the cPtr which is a const buffer
@@ -936,7 +906,7 @@ void   pcccommAppLayerSpiFlashReadResponseMsgBuildCallBack()
   // Send the buffer
   // Send the buffer to the GUI 
   //hwdriversUart1DmaTx(ResponseBuffer, MsgLength+2);
-  CDC_Transmit_HS(ResponseBuffer, MsgLength+2);
+//  CDC_Transmit_HS(ResponseBuffer, MsgLength+2);
   //TM_USB_VCP_Send(ResponseBuffer, MsgLength+2);
   //uartdllTxQueueEnqueue(UARTDLL_UART_1_VTASGUI, ResponseBuffer, MsgLength+2, false);
     // Free the buffer allocated for the spiRead request
@@ -975,7 +945,7 @@ void pcccommAppLayerParametersInit()
   pccpmmAppLayerStruct.BoardSystemRegisters.SupplyStatus             = 1;
   pccpmmAppLayerStruct.BoardSystemRegisters.BatteryStatus            = 1;
   pccpmmAppLayerStruct.BoardSystemRegisters.ChargingStatus           = 1;
-  pccpmmAppLayerStruct.BoardSystemRegisters.BootVersionRam           = fwupgradeBootloaderVersionGet();
+  pccpmmAppLayerStruct.BoardSystemRegisters.BootVersionRam           = 1; //fwupgradeBootloaderVersionGet();
   pccpmmAppLayerStruct.BoardSystemRegisters.RegisterCorruption       = 0;
   
 #if 1

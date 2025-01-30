@@ -65,9 +65,11 @@ portTASK_FUNCTION(vlapMain, pvParameters )
 
   lateConfig(); 
 
+
 #if 1
 
   // create the vlapDemodulator task
+  HAL_GPIO_WritePin (GPIOE,  GPIO_PIN_2, GPIO_PIN_SET);
   vlapmainDemodulatorTaskControl( VLAPMAIN_TASK_CREATE);
   //
   //ledsSet(0, LEDS_COLOR_MAGENTA, LEDS_STATE_BLINK, 4);
@@ -87,8 +89,8 @@ portTASK_FUNCTION(vlapMain, pvParameters )
   // For debug
   //hwdriversGpioBitWrite(HWDRIVERS_PB15_USB_TEST,1);
   
-  chargerReqSchedule();
-  sensorPressureReqSchedule();
+//  chargerReqSchedule();
+//  sensorPressureReqSchedule();
   //
   
   //hwdriversGpioBitWrite(HWDRIVERS_UI_ENABLE,0);
@@ -111,7 +113,9 @@ portTASK_FUNCTION(vlapMain, pvParameters )
     
     vTaskDelay( 1 );
     // Handle incoming serial data from the UART DMA and feed the uart DLL.
+    HAL_GPIO_WritePin (GPIOE,  GPIO_PIN_2, GPIO_PIN_RESET);
     hwdriversUart1DmaRxDataProcess();
+
     hwdriversUart6DmaRxDataProcess();
 #ifdef USE_CELLMODEM
     hwdriversUart2DmaRxDataProcess();
@@ -213,12 +217,12 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
 
   if(FirstTimeAfterJlinkProgramming)
   {
-    eventsJlinkProgrammaingLogMemoryPointersSet();
+//    eventsJlinkProgrammaingLogMemoryPointersSet();
     //eventsLogMemoryPointersToNvmSave();
   }
   
   //
-  commInit();
+//  commInit();
   // 
   //hwdriversSpiFlashConfig();
 
@@ -232,7 +236,7 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
   // TODO: I2C Removed 
   hwdriversI2cConfig();
   
-  chargerInit();
+//  chargerInit();
   
   dacInit();
   
@@ -268,7 +272,7 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
   
 
 
-  fwupgradeInit();
+//  fwupgradeInit();
 
 
 }
@@ -313,9 +317,9 @@ uint8_t RedLedState;
   
   
   hwdriversNtcTemperatureGet(&ReturnedPositiveNtcTemperature);
-  ReturnedVbatVoltage = chargerBattVoltageGet();
+  ReturnedVbatVoltage = 0;//chargerBattVoltageGet();
   
-  ReturnedDcVoltage = chargerUSBVoltageGet();
+  ReturnedDcVoltage = 0;//chargerUSBVoltageGet();
   hwdriversFrequencyMonitoringGet(&ReturnedRequency);
 
   // Report the battery voltage to the GUI ( 1mV units)

@@ -88,7 +88,7 @@ auditAbiantTemperatureState = AUDIT_TEMPERATURE_NORMAL;
  auditConfigurationState = AUDIT_PRE_CONFIGURED_STATE;
  AuditNurseModeReceiveAckCounter = AuditNurseModeReceiveAckTries;
   // Init the events handler
-  eventsInit(); // tbd
+//  eventsInit(); // tbd
   // Start the periodic timer callback every 10 timer ticks. 
   xTimerStart(xTimerCreate("acheck", AUDIT_LIFE_CYCLE_TIME, pdTRUE, (void *)0, auditLifeCycle), 0);
 }
@@ -234,7 +234,7 @@ static void auditLifeCycle(TimerHandle_t pxTimer)
   case AUDIT_PRE_CONFIGURED_STATE:
     xSemaphoreTake( configConfigurationValidSemaphoreHandle, portMAX_DELAY );
     xSemaphoreGive( configConfigurationValidSemaphoreHandle);
-    ledsInit();
+//    ledsInit();
     auditConfigurationState = AUDIT_FINISH_CONFIG;
     break;
   case AUDIT_FINISH_CONFIG:
@@ -326,8 +326,8 @@ if(TestEnable)
 uint16_t temp;
 ReturnCode_T auditAmbiantTemperatueProcessing()
 {
-  uint16_t newTemp = sensorTemperatureGet();
-  temp = sensorTemperatureGet();
+  uint16_t newTemp = 0;
+  temp = 0;
   auditTemperatureState_T newAuditAmbiantTemperatureState;
   
   // Check new level
