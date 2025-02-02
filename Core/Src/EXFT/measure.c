@@ -268,8 +268,8 @@ portTASK_FUNCTION(measureTask, pvParameters )
   switch(measurementConfigurationState)
   {
   case MEASUREMENT_PRE_CONFIGURED_STATE:
-    xSemaphoreTake( configConfigurationValidSemaphoreHandle, portMAX_DELAY );
-    xSemaphoreGive( configConfigurationValidSemaphoreHandle);
+//    xSemaphoreTake( configConfigurationValidSemaphoreHandle, portMAX_DELAY );
+//    xSemaphoreGive( configConfigurationValidSemaphoreHandle);
     measurementConfigurationState = MEASUREMENT_CONFIGURED_STATE;
     break;
   case MEASUREMENT_CONFIGURED_STATE:

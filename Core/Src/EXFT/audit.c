@@ -36,9 +36,6 @@ uint8_t auditAmbiantTemperatureCounter = 0;
 
 auditBvState_T bvState = AUDIT_BV_OK;
 
-typedef enum { AUDIT_PRE_CONFIGURED_STATE = 0, AUDIT_CONFIGURED_STATE = 1, AUDIT_LEDS_START_WAIT = 2, AUDIT_LEDS_START = 3, AUDIT_FINISH_CONFIG = 4 }  auditConfigurationState_T;
-
-auditConfigurationState_T auditConfigurationState;
 
 AuditBatteryLedState_T auditBatteryLedState = AUDIT_BATTERY_RED_OFF;
 
@@ -85,7 +82,6 @@ void auditInit(void)
 auditAbiantTemperatureState = AUDIT_TEMPERATURE_NORMAL;
 
 
- auditConfigurationState = AUDIT_PRE_CONFIGURED_STATE;
  AuditNurseModeReceiveAckCounter = AuditNurseModeReceiveAckTries;
   // Init the events handler
 //  eventsInit(); // tbd
@@ -228,20 +224,6 @@ uint16_t toggle =30000;
 ******************************************************************************/
 static void auditLifeCycle(TimerHandle_t pxTimer)
 {  
-  // Block the timer callback till configuration is ready
-  switch(auditConfigurationState)
-  {
-  case AUDIT_PRE_CONFIGURED_STATE:
-    xSemaphoreTake( configConfigurationValidSemaphoreHandle, portMAX_DELAY );
-    xSemaphoreGive( configConfigurationValidSemaphoreHandle);
-//    ledsInit();
-    auditConfigurationState = AUDIT_FINISH_CONFIG;
-    break;
-  case AUDIT_FINISH_CONFIG:
-    break;
-  default:
-    break;
-  }
 
   auditTxTemperatureOverheatCheck();
   auditPowerTelemetryUpdate();

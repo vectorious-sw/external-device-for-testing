@@ -117,10 +117,11 @@ portTASK_FUNCTION(vlapMain, pvParameters )
     hwdriversUart1DmaRxDataProcess();
 
     hwdriversUart6DmaRxDataProcess();
+//    hwdriversUart6DmaRxDataProcess();
 #ifdef USE_CELLMODEM
-    hwdriversUart2DmaRxDataProcess();
+//    hwdriversUart2DmaRxDataProcess();
 #endif
-    hwdriversUart3DmaRxDataProcess();
+//    hwdriversUart3DmaRxDataProcess();
     
 #if 0    
     switch(RequestState)
@@ -196,10 +197,10 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
   //hwdriversNvicConfig();
   // Init UARTS Async format: UARTS:1,2,3,6 
 
-  vTaskDelay(100);
+//  vTaskDelay(100);
   hwdriversUartsConfig();
 
-  vTaskDelay(100);
+//  vTaskDelay(100);
   // Init UARTS RX DMA: UARTS:1,2,3,6 
   hwdriversUartsDmaRxConfig();
   // Set all GPIOs configuration from the gpioTable
@@ -281,12 +282,12 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
 
 static void blinkGreenLed(void)
 {
-  xTimerStart(xTimerCreate("gled", // Just a text name, not used by the kernel.
-                           5000*portTICK_PERIOD_MS, //ond
-                           pdTRUE, // The timers will auto-reload themselves when they expire.
-                           (void *)0,
-                           blinkGreenLedCallback 
-                           ), 0);
+//  xTimerStart(xTimerCreate("gled", // Just a text name, not used by the kernel.
+//                           5000*portTICK_PERIOD_MS, //ond
+//                           pdTRUE, // The timers will auto-reload themselves when they expire.
+//                           (void *)0,
+//                           blinkGreenLedCallback
+//                           ), 0);
 }
 
 
