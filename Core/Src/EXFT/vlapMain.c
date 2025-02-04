@@ -69,7 +69,7 @@ portTASK_FUNCTION(vlapMain, pvParameters )
 #if 1
 
   // create the vlapDemodulator task
-  HAL_GPIO_WritePin (GPIOE,  GPIO_PIN_2, GPIO_PIN_SET);
+
   vlapmainDemodulatorTaskControl( VLAPMAIN_TASK_CREATE);
   //
   //ledsSet(0, LEDS_COLOR_MAGENTA, LEDS_STATE_BLINK, 4);
@@ -113,7 +113,7 @@ portTASK_FUNCTION(vlapMain, pvParameters )
     
     vTaskDelay( 1 );
     // Handle incoming serial data from the UART DMA and feed the uart DLL.
-    HAL_GPIO_WritePin (GPIOE,  GPIO_PIN_2, GPIO_PIN_RESET);
+
     hwdriversUart1DmaRxDataProcess();
 
     hwdriversUart6DmaRxDataProcess();

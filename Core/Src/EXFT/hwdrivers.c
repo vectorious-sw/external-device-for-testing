@@ -631,7 +631,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
   /* Prevent unused argument(s) compilation warning */
 	if(hadc == &hadc1)
+	{
 		mainAdcDmaTransferCompleteIsr(1);
+	}
 //	else
 //		if(hadc == &hadc2)
 //			adc2DmaCompleteIsr();
@@ -983,8 +985,8 @@ void hwdriversUartsConfig(void)
 
 void hwdriversReInitUartBleRxDma()
 {
-	HAL_UART_Receive_DMA(&huart3, Uart3RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
-	__HAL_UART_DISABLE_IT(&huart3, UART_IT_ERR);
+//	HAL_UART_Receive_DMA(&huart3, Uart3RxDmaCicularBuffer, UART_RX_DMA_CIRCULAR_BUFFER_LEGTH);
+//	__HAL_UART_DISABLE_IT(&huart3, UART_IT_ERR);
 }
 
 
@@ -1368,7 +1370,7 @@ ReturnCode_T hwdriversTxProcessing()
 void hwdriversUart2DmaTx(uint8_t *s, uint16_t length)
 {
 
-	HAL_UART_Transmit_DMA(&huart2, s, length);
+//	HAL_UART_Transmit_DMA(&huart2, s, length);
 	  Uart2Dma1Stream6Busy = true;
 #if 0
 
@@ -1457,7 +1459,7 @@ void hwdriversUart3DmaTx(uint8_t *s, uint16_t length)
 ******************************************************************************/
 void hwdriversUart6DmaTx(uint8_t *s, uint16_t length)
 {
-	HAL_UART_Transmit_DMA(&huart6, s, length);
+//	HAL_UART_Transmit_DMA(&huart6, s, length);
 	Uart6Dma2Stream6Busy = true;
 
 #if 0
@@ -1500,33 +1502,33 @@ void hwdriversUart6DmaTx(uint8_t *s, uint16_t length)
 
 
 
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
-	transQEntry_t myQueueDataPtr;
-
-#ifdef USE_CELLMODEM
-	if(huart == &huart2)
-	{
-		// Transmission completed, Dequeue element from queue and free user allocated if neeeded
-		if(transQDequeueFromISR(UartTransQueueHandle2, &myQueueDataPtr) == TRANSQ_OK)
-		{
-		  if(myQueueDataPtr.UserDataPtr && myQueueDataPtr.MemoryFreeNeeded)
-			xQueueSendFromISR(hwdriversMemFreeQueueHandle, &myQueueDataPtr.UserDataPtr, 0);
-		  Uart2Dma1Stream6Busy = false;
-		}
-	}
-#endif
-	if(huart == &huart6)
-	{
-		// Transmission completed, Dequeue element from queue and free user allocated if needed
-		if(transQDequeueFromISR(UartTransQueueHandle6, &myQueueDataPtr) == TRANSQ_OK)
-		{
-		 if(myQueueDataPtr.UserDataPtr && myQueueDataPtr.MemoryFreeNeeded)
-			xQueueSendFromISR(hwdriversMemFreeQueueHandle, &myQueueDataPtr.UserDataPtr, 0);
-		  Uart6Dma2Stream6Busy = false;
-		}
-	}
-}
+//void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+//{
+//	transQEntry_t myQueueDataPtr;
+//
+//#ifdef USE_CELLMODEM
+//	if(huart == &huart2)
+//	{
+//		// Transmission completed, Dequeue element from queue and free user allocated if neeeded
+//		if(transQDequeueFromISR(UartTransQueueHandle2, &myQueueDataPtr) == TRANSQ_OK)
+//		{
+//		  if(myQueueDataPtr.UserDataPtr && myQueueDataPtr.MemoryFreeNeeded)
+//			xQueueSendFromISR(hwdriversMemFreeQueueHandle, &myQueueDataPtr.UserDataPtr, 0);
+//		  Uart2Dma1Stream6Busy = false;
+//		}
+//	}
+//#endif
+//	if(huart == &huart6)
+//	{
+//		// Transmission completed, Dequeue element from queue and free user allocated if needed
+//		if(transQDequeueFromISR(UartTransQueueHandle6, &myQueueDataPtr) == TRANSQ_OK)
+//		{
+//		 if(myQueueDataPtr.UserDataPtr && myQueueDataPtr.MemoryFreeNeeded)
+//			xQueueSendFromISR(hwdriversMemFreeQueueHandle, &myQueueDataPtr.UserDataPtr, 0);
+//		  Uart6Dma2Stream6Busy = false;
+//		}
+//	}
+//}
 
 
 void UART_DMAReceiveCplt(DMA_HandleTypeDef *hdma)
@@ -1806,23 +1808,23 @@ void hwdriversUart3DmaRxDataProcess()
 ******************************************************************************/
 void hwdriversUart6DmaRxDataProcess()
 {
-  uint16_t DmaBufferHwIndex = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH - __HAL_DMA_GET_COUNTER(&hdma_usart6_rx);
-  uint16_t i;
-  // 
-  if(Uart6CicularBufferIndex < DmaBufferHwIndex)
-  {
-    for(i=0; i< DmaBufferHwIndex-Uart6CicularBufferIndex; i++)
-      uartDllRxFsm(UARTDLL_UART_6_RS485, UARTDLL_FSM_STIMULI_INCOMMING_CHAR,Uart6RxDmaCicularBuffer[Uart6CicularBufferIndex+i] );
-  }
-    
-  if(Uart6CicularBufferIndex > DmaBufferHwIndex)
-  {
-    for(i=0; i< UART_RX_DMA_CIRCULAR_BUFFER_LEGTH-Uart6CicularBufferIndex; i++)
-      uartDllRxFsm(UARTDLL_UART_6_RS485, UARTDLL_FSM_STIMULI_INCOMMING_CHAR,Uart6RxDmaCicularBuffer[Uart6CicularBufferIndex+i]);
-    for(i=0; i< DmaBufferHwIndex; i++)
-      uartDllRxFsm(UARTDLL_UART_6_RS485, UARTDLL_FSM_STIMULI_INCOMMING_CHAR,Uart6RxDmaCicularBuffer[i]);
-  }
-  Uart6CicularBufferIndex = DmaBufferHwIndex;
+//  uint16_t DmaBufferHwIndex = UART_RX_DMA_CIRCULAR_BUFFER_LEGTH - __HAL_DMA_GET_COUNTER(&hdma_usart6_rx);
+//  uint16_t i;
+//  //
+//  if(Uart6CicularBufferIndex < DmaBufferHwIndex)
+//  {
+//    for(i=0; i< DmaBufferHwIndex-Uart6CicularBufferIndex; i++)
+//      uartDllRxFsm(UARTDLL_UART_6_RS485, UARTDLL_FSM_STIMULI_INCOMMING_CHAR,Uart6RxDmaCicularBuffer[Uart6CicularBufferIndex+i] );
+//  }
+//
+//  if(Uart6CicularBufferIndex > DmaBufferHwIndex)
+//  {
+//    for(i=0; i< UART_RX_DMA_CIRCULAR_BUFFER_LEGTH-Uart6CicularBufferIndex; i++)
+//      uartDllRxFsm(UARTDLL_UART_6_RS485, UARTDLL_FSM_STIMULI_INCOMMING_CHAR,Uart6RxDmaCicularBuffer[Uart6CicularBufferIndex+i]);
+//    for(i=0; i< DmaBufferHwIndex; i++)
+//      uartDllRxFsm(UARTDLL_UART_6_RS485, UARTDLL_FSM_STIMULI_INCOMMING_CHAR,Uart6RxDmaCicularBuffer[i]);
+//  }
+//  Uart6CicularBufferIndex = DmaBufferHwIndex;
 }
 
 

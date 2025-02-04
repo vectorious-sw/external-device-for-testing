@@ -79,10 +79,6 @@ void Error_Handler(void);
 #define PHASE_SENSE_ZERO_GPIO_Port GPIOD
 #define EXT_TX_OUT_MODULATOR_Pin GPIO_PIN_13
 #define EXT_TX_OUT_MODULATOR_GPIO_Port GPIOD
-#define RS_485_TX_Pin GPIO_PIN_6
-#define RS_485_TX_GPIO_Port GPIOC
-#define RS_485_RX_Pin GPIO_PIN_7
-#define RS_485_RX_GPIO_Port GPIOC
 #define XO_FREQ_SYNC_IN_Pin GPIO_PIN_12
 #define XO_FREQ_SYNC_IN_GPIO_Port GPIOA
 #define SYS_JTMS_SWDIO_Pin GPIO_PIN_13
