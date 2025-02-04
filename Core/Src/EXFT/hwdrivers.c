@@ -421,7 +421,7 @@ void hwdriversAdc2Config(void)
 
 //	HAL_ADC_Start_DMA(&hadc2, (uint16_t*)&ADCConvertedValueUnFiltered, (sizeof(ADCConvertedValueUnFiltered) / sizeof(uint16_t)) - 1);
   // ADC for TX_MONITOR only TODO: Test this reference
-	HAL_ADC_Start_DMA(&hadc3, ((uint16_t*)&ADCConvertedValueUnFiltered) + 3, 1);
+	HAL_ADC_Start_DMA(&hadc2, (uint16_t*)&ADCConvertedValueUnFiltered, sizeof(ADCConvertedValueUnFiltered) / sizeof(uint16_t));
 
 
 
@@ -634,9 +634,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	{
 		mainAdcDmaTransferCompleteIsr(1);
 	}
-//	else
-//		if(hadc == &hadc2)
-//			adc2DmaCompleteIsr();
+	else
+		if(hadc == &hadc2)
+			adc2DmaCompleteIsr();
 
 
   /* NOTE : This function Should not be modified, when the callback is needed,

@@ -61,12 +61,6 @@ void Error_Handler(void);
 #define MAIN_OSC_ENABLE_GPIO_Port GPIOC
 #define EN_FB_IN_HIGH_Pin GPIO_PIN_1
 #define EN_FB_IN_HIGH_GPIO_Port GPIOA
-#define MEAS_3_3_Pin GPIO_PIN_2
-#define MEAS_3_3_GPIO_Port GPIOA
-#define MEAS_1_6_Pin GPIO_PIN_3
-#define MEAS_1_6_GPIO_Port GPIOA
-#define VDD_PA_MEAS_Pin GPIO_PIN_4
-#define VDD_PA_MEAS_GPIO_Port GPIOA
 #define UI_ENABLE_Pin GPIO_PIN_4
 #define UI_ENABLE_GPIO_Port GPIOC
 #define MAIN_BUCK_EN_Pin GPIO_PIN_5
