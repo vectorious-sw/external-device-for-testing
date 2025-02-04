@@ -65,9 +65,11 @@ portTASK_FUNCTION(vlapMain, pvParameters )
 
   lateConfig(); 
 
+
 #if 1
 
   // create the vlapDemodulator task
+
   vlapmainDemodulatorTaskControl( VLAPMAIN_TASK_CREATE);
   //
   //ledsSet(0, LEDS_COLOR_MAGENTA, LEDS_STATE_BLINK, 4);
@@ -87,8 +89,8 @@ portTASK_FUNCTION(vlapMain, pvParameters )
   // For debug
   //hwdriversGpioBitWrite(HWDRIVERS_PB15_USB_TEST,1);
   
-  chargerReqSchedule();
-  sensorPressureReqSchedule();
+//  chargerReqSchedule();
+//  sensorPressureReqSchedule();
   //
   
   //hwdriversGpioBitWrite(HWDRIVERS_UI_ENABLE,0);
@@ -111,12 +113,15 @@ portTASK_FUNCTION(vlapMain, pvParameters )
     
     vTaskDelay( 1 );
     // Handle incoming serial data from the UART DMA and feed the uart DLL.
+
     hwdriversUart1DmaRxDataProcess();
+
     hwdriversUart6DmaRxDataProcess();
+//    hwdriversUart6DmaRxDataProcess();
 #ifdef USE_CELLMODEM
-    hwdriversUart2DmaRxDataProcess();
+//    hwdriversUart2DmaRxDataProcess();
 #endif
-    hwdriversUart3DmaRxDataProcess();
+//    hwdriversUart3DmaRxDataProcess();
     
 #if 0    
     switch(RequestState)
@@ -192,10 +197,10 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
   //hwdriversNvicConfig();
   // Init UARTS Async format: UARTS:1,2,3,6 
 
-  vTaskDelay(100);
+//  vTaskDelay(100);
   hwdriversUartsConfig();
 
-  vTaskDelay(100);
+//  vTaskDelay(100);
   // Init UARTS RX DMA: UARTS:1,2,3,6 
   hwdriversUartsDmaRxConfig();
   // Set all GPIOs configuration from the gpioTable
@@ -213,12 +218,12 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
 
   if(FirstTimeAfterJlinkProgramming)
   {
-    eventsJlinkProgrammaingLogMemoryPointersSet();
+//    eventsJlinkProgrammaingLogMemoryPointersSet();
     //eventsLogMemoryPointersToNvmSave();
   }
   
   //
-  commInit();
+//  commInit();
   // 
   //hwdriversSpiFlashConfig();
 
@@ -232,7 +237,7 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
   // TODO: I2C Removed 
   hwdriversI2cConfig();
   
-  chargerInit();
+//  chargerInit();
   
   dacInit();
   
@@ -268,7 +273,7 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
   
 
 
-  fwupgradeInit();
+//  fwupgradeInit();
 
 
 }
@@ -277,12 +282,12 @@ void vlapMainSetupHardware(uint8_t FirstTimeAfterJlinkProgramming)
 
 static void blinkGreenLed(void)
 {
-  xTimerStart(xTimerCreate("gled", // Just a text name, not used by the kernel.
-                           5000*portTICK_PERIOD_MS, //ond
-                           pdTRUE, // The timers will auto-reload themselves when they expire.
-                           (void *)0,
-                           blinkGreenLedCallback 
-                           ), 0);
+//  xTimerStart(xTimerCreate("gled", // Just a text name, not used by the kernel.
+//                           5000*portTICK_PERIOD_MS, //ond
+//                           pdTRUE, // The timers will auto-reload themselves when they expire.
+//                           (void *)0,
+//                           blinkGreenLedCallback
+//                           ), 0);
 }
 
 
@@ -313,9 +318,9 @@ uint8_t RedLedState;
   
   
   hwdriversNtcTemperatureGet(&ReturnedPositiveNtcTemperature);
-  ReturnedVbatVoltage = chargerBattVoltageGet();
+  ReturnedVbatVoltage = 0;//chargerBattVoltageGet();
   
-  ReturnedDcVoltage = chargerUSBVoltageGet();
+  ReturnedDcVoltage = 0;//chargerUSBVoltageGet();
   hwdriversFrequencyMonitoringGet(&ReturnedRequency);
 
   // Report the battery voltage to the GUI ( 1mV units)

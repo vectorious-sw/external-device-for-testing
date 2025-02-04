@@ -447,7 +447,7 @@ ReturnCode_T protocolappMessageBuildnNotViaFlash(uartdllChannel_t Channel, uint3
 ***************************************************************************/
 uint8_t* protocolappUniqueIdPtrGet()
 {
-  return( (uint8_t*) 0x1fff7a10);
+  return( (uint8_t*) 0x1FF1E800);
 }
 
 

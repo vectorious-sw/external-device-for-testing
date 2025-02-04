@@ -24,7 +24,6 @@ TimerHandle_t ConfigFsmTimerHandler;
 
 configConfigurationDb_t configConfigurationDb;
 configProductionDb_t configProductionDb;
-SemaphoreHandle_t configConfigurationValidSemaphoreHandle;
 configFsmState_T configFsmState;
 //uint8_t * GlobalPtr;
 
@@ -48,13 +47,13 @@ ReturnCode_T configInit(uint8_t FirstTimeAfterJlinkProgramming)
   // Create input queue  
   configRequestQueueHandle = xQueueCreate(5, sizeof(configFsmQueueEntryType_T));
   // Create the task
-  xTaskCreate(configTask, configTaskName, configTaskSTACK_SIZE, NULL,  configTaskPriority, ( TaskHandle_t * ) NULL );
+//  xTaskCreate(configTask, configTaskName, configTaskSTACK_SIZE, NULL,  configTaskPriority, ( TaskHandle_t * ) NULL );
   // Create timer.
-  ConfigFsmTimerHandler =  xTimerCreate("configTimer",  portTICK_PERIOD_MS, pdFALSE, (void *)0, configFsmTimerTimeoutCallback);
+//  ConfigFsmTimerHandler =  xTimerCreate("configTimer",  portTICK_PERIOD_MS, pdFALSE, (void *)0, configFsmTimerTimeoutCallback);
 
   
   // Creates binary semaphore to flag other depended activities that the configuration data struture is not ready for use
-  configConfigurationValidSemaphoreHandle = xSemaphoreCreateBinary();
+//  configConfigurationValidSemaphoreHandle = xSemaphoreCreateBinary();
   
   // Copies the production Db from the flash to RAM
   configCopyProductionDbFromFlash();
@@ -116,7 +115,7 @@ portTASK_FUNCTION(configTask, pvParameters )
               Crc32 =  crc32BuffCalc((uint8_t*)&((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->NvramConfigDb.NvramConfigImage, 0, sizeof(configConfigurationDb_t));
               ((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->NvramConfigDb.Crc32 = Crc32;
               // Encrypt the new config sturct
-              aescbcEncryptConfig((configNvramConfigurationEncryptedDb_t *)ConfigConfigEncryptedTempBuffPtr);
+//              aescbcEncryptConfig((configNvramConfigurationEncryptedDb_t *)ConfigConfigEncryptedTempBuffPtr);
               Crc32 =  crc32BuffCalc((uint8_t*)((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr), 0, sizeof(configNvramConfigurationEncryptedDb_t) - 4);
               // Calculate the new CRC for the encrypted config sturct
               ((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->Crc32 = Crc32;
@@ -159,7 +158,7 @@ portTASK_FUNCTION(configTask, pvParameters )
           if(Crc32 == (((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->Crc32))
           {
             // Decrypt it
-            aescbcDecryptConfig((configNvramConfigurationEncryptedDb_t *)ConfigConfigEncryptedTempBuffPtr);
+//            aescbcDecryptConfig((configNvramConfigurationEncryptedDb_t *)ConfigConfigEncryptedTempBuffPtr);
             Crc32 = crc32BuffCalc((uint8_t*)&((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->NvramConfigDb.NvramConfigImage, 0, sizeof(configConfigurationDb_t));
             // Check that the CRC of the configuration Db itself is valid after decryption
             if(Crc32 == ((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->NvramConfigDb.Crc32)
@@ -169,7 +168,7 @@ portTASK_FUNCTION(configTask, pvParameters )
 
               // The "Semaphore Give" will release all the processes waiting for configuration to be ready
               // In our case the processes are: auditTask, measurementTask, commTask
-              xSemaphoreGive(configConfigurationValidSemaphoreHandle);
+//              xSemaphoreGive(configConfigurationValidSemaphoreHandle);
               CONFIG_FSM_STATE_CHANGE(CONFIG_STATE_READY, 10);
             }
             else
@@ -202,7 +201,7 @@ portTASK_FUNCTION(configTask, pvParameters )
         {
         case CONFIG_FSM_QUEUE_ENTRY_TYPE_APPLICATION_CONFIG_UPDATE:
           // Encrypt the configuration
-          aescbcEncryptConfig((configNvramConfigurationEncryptedDb_t *)ConfigConfigEncryptedTempBuffPtr);
+//          aescbcEncryptConfig((configNvramConfigurationEncryptedDb_t *)ConfigConfigEncryptedTempBuffPtr);
           // Calculate the CRC32 config sturct(without the last 4 bytes of CRC itself)
           Crc32 =  crc32BuffCalc((uint8_t*)(((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)), 0, sizeof(configNvramConfigurationEncryptedDb_t) - 4);
           ((configNvramConfigurationEncryptedDb_t*)ConfigConfigEncryptedTempBuffPtr)->Crc32 = Crc32;
@@ -422,10 +421,10 @@ uint32_t configVersionIdGet()
 ******************************************************************************/
 ReturnCode_T configProductionDbOpcWrite(uint16_t Offset)
 {
-  configProductionDb.PressureSensorOffsetDelta = sensorPressureOPCSet(Offset, configProductionDb.PressureSensorOffsetDelta);  
+  configProductionDb.PressureSensorOffsetDelta = 0;//sensorPressureOPCSet(Offset, configProductionDb.PressureSensorOffsetDelta);
   configCopyProductionDbToFlash();
   
-  eventsEventWrite(0,0,PROTOCOLAPP_GENERAL_OPC_EVENT,0,0, 0);
+//  eventsEventWrite(0,0,PROTOCOLAPP_GENERAL_OPC_EVENT,0,0, 0);
   
   // Return success
   return(RETURNCODE_OK);
