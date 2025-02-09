@@ -224,7 +224,7 @@ ReturnCode_T protocolappMessageBuild(uartdllChannel_t Channel, uint32_t RequrstO
   uint8_t* OpCodeRelatedStructurePtr;
   uint16_t OpCodeRelatedStructureLength = 0;
   uint16_t transmitterTemperaturePtr;
-  hwdriversNtcTemperatureGet(&transmitterTemperaturePtr);
+  hwdriversNtcTemperatureGet(&transmitterTemperaturePtr,HWDRIVERS_TX_NTC_P);
   //ProtocolappGeneralResp_t myAck;
   
   // The basic message length is the sum of the mandatory headers (SPI Protocol and UpStream) 

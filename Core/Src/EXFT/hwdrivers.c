@@ -2561,7 +2561,7 @@ ReturnCode_T hwdriversPwmControl(typesControl_T Control)
 * @param  
 * @retval 
 ******************************************************************************/
-ReturnCode_T hwdriversNtcTemperatureGet(int16_t *ReturnedNtcTemperaturePtr)
+ReturnCode_T hwdriversNtcTemperatureGet(int16_t *ReturnedNtcTemperaturePtr , hwdriversAdc2InputsT adc2Input)
 {
   ReturnCode_T MyReturnCode;
   float FloatAdcVoltage;
@@ -2569,7 +2569,7 @@ ReturnCode_T hwdriversNtcTemperatureGet(int16_t *ReturnedNtcTemperaturePtr)
   float resultTemperature;
   
   // Calculate voltage in mV
-  FloatAdcVoltage = (HEDRIVERS_VDD * ADCConvertedValue[HWDRIVERS_TX_NTC])/4096;
+  FloatAdcVoltage = (HEDRIVERS_VDD * ADCConvertedValue[adc2Input])/4096;
   //Calculate NTC resistor by given formula: Vmeasure*10K/(Vcc-Vmeasure)
   FloatNTCCalc = (FloatAdcVoltage * 10000.0)/(HEDRIVERS_VDD - FloatAdcVoltage);
   //Calculate temperature in Kelvin and then change it to celsius
@@ -2580,6 +2580,32 @@ ReturnCode_T hwdriversNtcTemperatureGet(int16_t *ReturnedNtcTemperaturePtr)
 
   return(MyReturnCode);
 }
+
+/******************************************************************************
+* @brief returns the Phase sense pins states
+* @param
+* @retval
+******************************************************************************/
+hwdriversPhaseSense_T hwdriversPhaseSenseCheck()
+{
+	hwdriversPhaseSense_T PhaseSenseUnion;
+//
+	PhaseSenseUnion.hwdriversPhaseSensePins.PHASE_SENSE_ZERO = HAL_GPIO_ReadPin(PHASE_SENSE_ZERO_GPIO_Port, PHASE_SENSE_ZERO_Pin);
+	PhaseSenseUnion.hwdriversPhaseSensePins.PHASE_SENSE_OVER = HAL_GPIO_ReadPin(PHASE_SENSE_OVER_GPIO_Port, PHASE_SENSE_OVER_Pin);
+	PhaseSenseUnion.hwdriversPhaseSensePins.PHASE_SENSE_UNDER = HAL_GPIO_ReadPin(PHASE_SENSE_UNDER_GPIO_Port, PHASE_SENSE_UNDER_Pin);
+//
+//  // Calculate voltage in mV
+//  FloatAdcVoltage = (HEDRIVERS_VDD * ADCConvertedValue[adc2Input])/4096;
+//  //Calculate NTC resistor by given formula: Vmeasure*10K/(Vcc-Vmeasure)
+//  FloatNTCCalc = (FloatAdcVoltage * 10000.0)/(HEDRIVERS_VDD - FloatAdcVoltage);
+//  //Calculate temperature in Kelvin and then change it to celsius
+//  resultTemperature = (1/(((1.0/3428.0) * log(FloatNTCCalc/10000.0)) +(1.0/298.15))) - 273.15;
+//  *ReturnedNtcTemperaturePtr = (int16_t) (resultTemperature * 100);
+//
+//  MyReturnCode = RETURNCODE_OK;
+
+  return PhaseSenseUnion;
+}
 /******************************************************************************
 * @brief Set the pointer's value to the output current ond voltage the VDD_PA converter * 100
 * @param 
@@ -2587,19 +2613,19 @@ ReturnCode_T hwdriversNtcTemperatureGet(int16_t *ReturnedNtcTemperaturePtr)
 ******************************************************************************/
 void hwdriversTxPowerGet(int16_t *ReturnedCurrentPtr, int16_t *ReturnedVoltagePtr)
 {
-  float adcCurrent;
-  float adcVoltage;
-  float resultCurrent;
-  float resultVoltage;
-  
-  // Calculate voltage in mV
-  adcCurrent = (HEDRIVERS_VDD * ADCConvertedValue[HWDRIVERS_TX_ISMON_PA])/4095;
-  adcVoltage = (HEDRIVERS_VDD * ADCConvertedValue[HWDRIVERS_TX_VDD_PA])/4095;
-  // Calculate output current: ((Vmeasure - 0.25V) / 10) / Rsense
-  resultCurrent = ((adcCurrent - HWDRIVERS_ISMON_OFFSET) / 10.0) / HWDRIVERS_ISMON_RESISTOR;
-  resultVoltage = (adcVoltage / (float)HWDRIVERS_VDD_PA_RATIO);
-  *ReturnedCurrentPtr = (int16_t) (resultCurrent * 100);
-  *ReturnedVoltagePtr = (int16_t) (resultVoltage * 100);
+//  float adcCurrent;
+//  float adcVoltage;
+//  float resultCurrent;
+//  float resultVoltage;
+//
+//  // Calculate voltage in mV
+//  adcCurrent = (HEDRIVERS_VDD * ADCConvertedValue[HWDRIVERS_TX_ISMON_PA])/4095;
+//  adcVoltage = (HEDRIVERS_VDD * ADCConvertedValue[HWDRIVERS_TX_VDD_PA])/4095;
+//  // Calculate output current: ((Vmeasure - 0.25V) / 10) / Rsense
+//  resultCurrent = ((adcCurrent - HWDRIVERS_ISMON_OFFSET) / 10.0) / HWDRIVERS_ISMON_RESISTOR;
+//  resultVoltage = (adcVoltage / (float)HWDRIVERS_VDD_PA_RATIO);
+//  *ReturnedCurrentPtr = (int16_t) (resultCurrent * 100);
+//  *ReturnedVoltagePtr = (int16_t) (resultVoltage * 100);
 }
 /******************************************************************************
 * @brief  ReturnCode_T hwdriversFrequencyMonitoringGet(uint16_t *ReturnedRequencyPtr)
@@ -2622,9 +2648,9 @@ ReturnCode_T hwdriversFrequencyMonitoringGet(uint16_t *ReturnedRequencyPtr)
 ReturnCode_T hwdriversTxMonitorGet(uint16_t *ReturnedTxMonitorLevelPtr)
 {
   // Return the last measured Tx monitor value
-  *ReturnedTxMonitorLevelPtr = ADCConvertedValue[HWDRIVERS_TX_MONITOR];
-
-  return(RETURNCODE_OK);
+//  *ReturnedTxMonitorLevelPtr = ADCConvertedValue[HWDRIVERS_TX_MONITOR];
+//
+//  return(RETURNCODE_OK);
 }
 
 

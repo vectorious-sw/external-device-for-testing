@@ -106,11 +106,19 @@ typedef enum
 
 typedef enum
 {
-  HWDRIVERS_TX_NTC,
-  HWDRIVERS_TX_VDD_PA,
-  HWDRIVERS_TX_ISMON_PA,
-  HWDRIVERS_TX_MONITOR,
+  HWDRIVERS_TX_NTC_P,
+  HWDRIVERS_TX_NTC_N,
 } hwdriversAdc2InputsT;
+
+#pragma pack(1)
+typedef union {
+  struct {
+    uint8_t PHASE_SENSE_OVER:1;
+    uint8_t PHASE_SENSE_UNDER:1;
+    uint8_t PHASE_SENSE_ZERO:1;
+  } hwdriversPhaseSensePins;
+  uint8_t hwdriversPhaseSenseAll;
+} hwdriversPhaseSense_T;
 
 #define UART_RX_BUFFER_LENGTH /*256*/ 1100
 extern uint8_t UartRxBuffer[UART_RX_BUFFER_LENGTH];
@@ -260,7 +268,7 @@ uint8_t hwdriversPhaseRawDataGet();
 ReturnCode_T hwdriversGpioSet(HwdriversGpiosT RegID, uint8_t BitState);
 
 uint32_t hwdriversCyclesCounterGet();
-ReturnCode_T hwdriversNtcTemperatureGet(int16_t *ReturnedNtcTemperaturePtr);
+ReturnCode_T hwdriversNtcTemperatureGet(int16_t *ReturnedNtcTemperaturePtr , hwdriversAdc2InputsT adc2Input);
 ReturnCode_T hwdriversVbatVoltageGet(uint16_t *ReturnedVbatVoltagePtr);
 ReturnCode_T hwdriversFrequencyMonitoringGet(uint16_t *ReturnedRequencyPtr);
 void hwdriversTxPowerGet(int16_t *ReturnedCurrentPtr, int16_t *ReturnedVoltagePtr);
@@ -286,6 +294,7 @@ void hwdriversReInitUart1PcRxDma();
 void hwdriversReInitUartBleRxDma();
 
 void hwdriversUsbCicularBufferInser(uint8_t *Ptr, int Length);
+hwdriversPhaseSense_T hwdriversPhaseSenseCheck();
 
 // void hwdriversVinInterruptConfig(void);
 // void Configure_PA0(void);

@@ -226,7 +226,9 @@ static void auditLifeCycle(TimerHandle_t pxTimer)
 {  
 
   auditTxTemperatureOverheatCheck();
-  auditPowerTelemetryUpdate();
+//  auditPowerTelemetryUpdate();
+
+  auditPhaseSenseCheck();
 
   hwdriversTxProcessing();
 //  if(chargerFinishedUpdating)
@@ -519,18 +521,33 @@ AuditBeltHumanCheck_T auditBeltHumanStatusGet()
 
 auditTemperatureState_T auditTxTemperatureOverheatCheck()
 {
-  int16_t ReturnedNtcTemperature;
+  int16_t ReturnedNtcPTemperature;
+  int16_t ReturnedNtcNTemperature;
  
-  hwdriversNtcTemperatureGet(&ReturnedNtcTemperature);
-  pccpmmAppLayerStruct.Board1SystemRegisters.NtcPosL = ReturnedNtcTemperature;
-  pccpmmAppLayerStruct.Board1SystemRegisters.NtcPosM = ReturnedNtcTemperature>>8;
+  hwdriversNtcTemperatureGet(&ReturnedNtcPTemperature,HWDRIVERS_TX_NTC_P);
+  hwdriversNtcTemperatureGet(&ReturnedNtcNTemperature,HWDRIVERS_TX_NTC_N);
+  pccpmmAppLayerStruct.Board1SystemRegisters.NtcPosL = ReturnedNtcPTemperature;
+  pccpmmAppLayerStruct.Board1SystemRegisters.NtcPosM = ReturnedNtcPTemperature>>8;
+  pccpmmAppLayerStruct.Board1SystemRegisters.NtcNegL = ReturnedNtcNTemperature;
+  pccpmmAppLayerStruct.Board1SystemRegisters.NtcNegM = ReturnedNtcNTemperature>>8;
   
-  if (ReturnedNtcTemperature >= MAX_TEMPERATURE)
+  if (ReturnedNtcPTemperature >= MAX_TEMPERATURE)
   {
     return(AUDIT_TEMPERATURE_HIGH);
   }
 
   return(AUDIT_TEMPERATURE_NORMAL);
+}
+
+void auditPhaseSenseCheck()
+{
+
+	hwdriversPhaseSense_T phaseSenseUnion = hwdriversPhaseSenseCheck();
+
+	pccpmmAppLayerStruct.Board1SystemRegisters.AccX = phaseSenseUnion.hwdriversPhaseSensePins.PHASE_SENSE_ZERO;
+	pccpmmAppLayerStruct.Board1SystemRegisters.AccY = phaseSenseUnion.hwdriversPhaseSensePins.PHASE_SENSE_OVER;
+	pccpmmAppLayerStruct.Board1SystemRegisters.AccZ = phaseSenseUnion.hwdriversPhaseSensePins.PHASE_SENSE_UNDER;
+
 }
 
 void auditPowerTelemetryUpdate()

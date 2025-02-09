@@ -317,7 +317,7 @@ uint8_t RedLedState;
 // uartdllTxQueueEnqueue(UARTDLL_UART_6_RS485, MyTestBuff, Len, false);
   
   
-  hwdriversNtcTemperatureGet(&ReturnedPositiveNtcTemperature);
+  hwdriversNtcTemperatureGet(&ReturnedPositiveNtcTemperature,HWDRIVERS_TX_NTC_P);
   ReturnedVbatVoltage = 0;//chargerBattVoltageGet();
   
   ReturnedDcVoltage = 0;//chargerUSBVoltageGet();
